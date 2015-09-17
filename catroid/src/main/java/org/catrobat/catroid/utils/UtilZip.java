@@ -1,6 +1,6 @@
 /*
  * Catroid: An on-device visual programming system for Android devices
- * Copyright (C) 2010-2014 The Catrobat Team
+ * Copyright (C) 2010-2015 The Catrobat Team
  * (<http://developer.catrobat.org/credits>)
  *
  * This program is free software: you can redistribute it and/or modify
@@ -127,7 +127,7 @@ public final class UtilZip {
 
 				if (zipEntry.isDirectory()) {
 					File entryFile = new File(Utils.buildPath(outDirectory, zipEntry.getName()));
-					if (!entryFile.mkdir() && !entryFile.isDirectory()) {
+					if (!entryFile.mkdirs() && !entryFile.isDirectory()) {
 						zipInputStream.close();
 						throw new IOException(ERROR_FOLDER_NOT_CREATED);
 					}
@@ -142,7 +142,7 @@ public final class UtilZip {
 				FileOutputStream fileOutputStream = new FileOutputStream(entryFile);
 				int count;
 				destinationOutputStream = new BufferedOutputStream(fileOutputStream, Constants.BUFFER_8K);
-				while ((count = zipInputStream.read(data, 0, Constants.BUFFER_8K)) != -1) {
+				while ((count = zipInputStream.read(data, 0, Constants.BUFFER_8K)) > 0) {
 					destinationOutputStream.write(data, 0, count);
 				}
 				destinationOutputStream.flush();

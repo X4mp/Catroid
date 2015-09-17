@@ -1,6 +1,6 @@
 /*
  * Catroid: An on-device visual programming system for Android devices
- * Copyright (C) 2010-2014 The Catrobat Team
+ * Copyright (C) 2010-2015 The Catrobat Team
  * (<http://developer.catrobat.org/credits>)
  *
  * This program is free software: you can redistribute it and/or modify
@@ -35,9 +35,7 @@ import android.widget.LinearLayout;
 import org.catrobat.catroid.ProjectManager;
 import org.catrobat.catroid.R;
 import org.catrobat.catroid.content.Project;
-import org.catrobat.catroid.exceptions.CompatibilityProjectException;
-import org.catrobat.catroid.exceptions.LoadingProjectException;
-import org.catrobat.catroid.exceptions.OutdatedVersionProjectException;
+import org.catrobat.catroid.exceptions.ProjectException;
 import org.catrobat.catroid.ui.dialogs.CustomAlertDialogBuilder;
 
 public class LoadProjectTask extends AsyncTask<Void, Void, Boolean> {
@@ -47,6 +45,7 @@ public class LoadProjectTask extends AsyncTask<Void, Void, Boolean> {
 	private Activity activity;
 	private String projectName;
 	private boolean showErrorMessage;
+	private String errorMessage;
 	private boolean startProjectActivity;
 	private LinearLayout linearLayoutProgressCircle;
 
@@ -57,6 +56,7 @@ public class LoadProjectTask extends AsyncTask<Void, Void, Boolean> {
 		this.projectName = projectName;
 		this.showErrorMessage = showErrorMessage;
 		this.startProjectActivity = startProjectActivity;
+		this.errorMessage = activity.getString(R.string.error_load_project);
 	}
 
 	public void setOnLoadProjectCompleteListener(OnLoadProjectCompleteListener listener) {
@@ -80,14 +80,9 @@ public class LoadProjectTask extends AsyncTask<Void, Void, Boolean> {
 		if (currentProject == null || !currentProject.getName().equals(projectName)) {
 			try {
 				ProjectManager.getInstance().loadProject(projectName, activity);
-			} catch (LoadingProjectException loadingProjectException) {
-				Log.e(TAG, "Project cannot load", loadingProjectException);
-				return false;
-			} catch (OutdatedVersionProjectException outdatedVersionException) {
-				Log.e(TAG, "Projectcode version is outdated", outdatedVersionException);
-				return false;
-			} catch (CompatibilityProjectException compatibilityException) {
-				Log.e(TAG, "Project is not compatible", compatibilityException);
+			} catch (ProjectException projectException) {
+				Log.e(TAG, "Project cannot load", projectException);
+				errorMessage = projectException.getUiErrorMessage();
 				return false;
 			}
 		}
@@ -104,7 +99,7 @@ public class LoadProjectTask extends AsyncTask<Void, Void, Boolean> {
 
 				Builder builder = new CustomAlertDialogBuilder(activity);
 				builder.setTitle(R.string.error);
-				builder.setMessage(R.string.error_load_project);
+				builder.setMessage(errorMessage);
 				builder.setNeutralButton(R.string.close, new OnClickListener() {
 					@Override
 					public void onClick(DialogInterface dialog, int which) {
@@ -113,7 +108,6 @@ public class LoadProjectTask extends AsyncTask<Void, Void, Boolean> {
 				});
 				Dialog errorDialog = builder.create();
 				errorDialog.show();
-
 			} else {
 				onLoadProjectCompleteListener.onLoadProjectSuccess(startProjectActivity);
 			}
@@ -125,7 +119,5 @@ public class LoadProjectTask extends AsyncTask<Void, Void, Boolean> {
 		void onLoadProjectSuccess(boolean startProjectActivity);
 
 		void onLoadProjectFailure();
-
 	}
-
 }

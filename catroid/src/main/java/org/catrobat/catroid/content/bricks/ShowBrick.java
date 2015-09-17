@@ -1,6 +1,6 @@
 /*
  * Catroid: An on-device visual programming system for Android devices
- * Copyright (C) 2010-2014 The Catrobat Team
+ * Copyright (C) 2010-2015 The Catrobat Team
  * (<http://developer.catrobat.org/credits>)
  *
  * This program is free software: you can redistribute it and/or modify
@@ -42,7 +42,6 @@ public class ShowBrick extends BrickBaseType {
 	private static final long serialVersionUID = 1L;
 
 	public ShowBrick() {
-
 	}
 
 	@Override
@@ -84,11 +83,10 @@ public class ShowBrick extends BrickBaseType {
 			View layout = view.findViewById(R.id.brick_show_layout);
 			Drawable background = layout.getBackground();
 			background.setAlpha(alphaValue);
-			this.alphaValue = (alphaValue);
+			this.alphaValue = alphaValue;
 
 			TextView textSpeak = (TextView) view.findViewById(R.id.brick_show_textview);
 			textSpeak.setTextColor(textSpeak.getTextColors().withAlpha(alphaValue));
-
 		}
 
 		return view;
@@ -109,5 +107,4 @@ public class ShowBrick extends BrickBaseType {
 		sequence.addAction(ExtendedActions.show(sprite));
 		return null;
 	}
-
 }

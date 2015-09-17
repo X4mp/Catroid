@@ -1,6 +1,6 @@
 /*
  * Catroid: An on-device visual programming system for Android devices
- * Copyright (C) 2010-2014 The Catrobat Team
+ * Copyright (C) 2010-2015 The Catrobat Team
  * (<http://developer.catrobat.org/credits>)
  *
  * This program is free software: you can redistribute it and/or modify
@@ -26,7 +26,6 @@ import android.content.Context;
 import android.graphics.drawable.Drawable;
 import android.util.Log;
 import android.view.View;
-import android.view.View.OnClickListener;
 import android.widget.BaseAdapter;
 import android.widget.CompoundButton;
 import android.widget.CompoundButton.OnCheckedChangeListener;
@@ -36,9 +35,7 @@ import com.badlogic.gdx.scenes.scene2d.actions.SequenceAction;
 
 import org.catrobat.catroid.ProjectManager;
 import org.catrobat.catroid.R;
-
 import org.catrobat.catroid.common.BrickValues;
-
 import org.catrobat.catroid.content.Sprite;
 import org.catrobat.catroid.content.actions.ExtendedActions;
 import org.catrobat.catroid.formulaeditor.Formula;
@@ -48,7 +45,7 @@ import org.catrobat.catroid.utils.Utils;
 
 import java.util.List;
 
-public class GlideToBrick extends FormulaBrick implements OnClickListener {
+public class GlideToBrick extends FormulaBrick {
 	private static final long serialVersionUID = 1L;
 
 	private transient View prototypeView;
@@ -130,15 +127,14 @@ public class GlideToBrick extends FormulaBrick implements OnClickListener {
 		TextView times = (TextView) view.findViewById(R.id.brick_glide_to_seconds_text_view);
 
 		if (getFormulaWithBrickField(BrickField.DURATION_IN_SECONDS).isSingleNumberFormula()) {
-            try{
+			try {
 				times.setText(view.getResources().getQuantityString(
 						R.plurals.second_plural,
 						Utils.convertDoubleToPluralInteger(getFormulaWithBrickField(BrickField.DURATION_IN_SECONDS)
 								.interpretDouble(ProjectManager.getInstance().getCurrentSprite()))));
-            }catch(InterpretationException interpretationException){
-                Log.d(getClass().getSimpleName(), "Couldn't interpret Formula.", interpretationException);
-            }
-
+			} catch (InterpretationException interpretationException) {
+				Log.d(getClass().getSimpleName(), "Couldn't interpret Formula.", interpretationException);
+			}
 		} else {
 
 			// Random Number to get into the "other" keyword for values like 0.99 or 2.001 seconds or degrees
@@ -165,11 +161,11 @@ public class GlideToBrick extends FormulaBrick implements OnClickListener {
 		TextView textY = (TextView) prototypeView.findViewById(R.id.brick_glide_to_prototype_text_view_y);
 		TextView textDuration = (TextView) prototypeView.findViewById(R.id.brick_glide_to_prototype_text_view_duration);
 		TextView times = (TextView) prototypeView.findViewById(R.id.brick_glide_to_seconds_text_view);
-        textX.setText(String.valueOf(BrickValues.X_POSITION));
-        textY.setText(String.valueOf(BrickValues.Y_POSITION));
-        textDuration.setText(String.valueOf(BrickValues.DURATION));
-        times.setText(context.getResources().getQuantityString(R.plurals.second_plural,
-                    Utils.convertDoubleToPluralInteger(BrickValues.DURATION)));
+		textX.setText(String.valueOf(BrickValues.X_POSITION));
+		textY.setText(String.valueOf(BrickValues.Y_POSITION));
+		textDuration.setText(String.valueOf(BrickValues.DURATION));
+		times.setText(context.getResources().getQuantityString(R.plurals.second_plural,
+				Utils.convertDoubleToPluralInteger(BrickValues.DURATION)));
 		return prototypeView;
 	}
 
@@ -201,8 +197,7 @@ public class GlideToBrick extends FormulaBrick implements OnClickListener {
 			editY.setTextColor(editY.getTextColors().withAlpha(alphaValue));
 			editY.getBackground().setAlpha(alphaValue);
 
-			this.alphaValue = (alphaValue);
-
+			this.alphaValue = alphaValue;
 		}
 
 		return view;
@@ -213,21 +208,20 @@ public class GlideToBrick extends FormulaBrick implements OnClickListener {
 		if (checkbox.getVisibility() == View.VISIBLE) {
 			return;
 		}
+
 		switch (view.getId()) {
 			case R.id.brick_glide_to_edit_text_x:
-				FormulaEditorFragment.showFragment(view, this, getFormulaWithBrickField(BrickField.X_DESTINATION));
+				FormulaEditorFragment.showFragment(view, this, BrickField.X_DESTINATION);
 				break;
 
 			case R.id.brick_glide_to_edit_text_y:
-				FormulaEditorFragment.showFragment(view, this, getFormulaWithBrickField(BrickField.Y_DESTINATION));
+				FormulaEditorFragment.showFragment(view, this, BrickField.Y_DESTINATION);
 				break;
 
 			case R.id.brick_glide_to_edit_text_duration:
-				FormulaEditorFragment
-						.showFragment(view, this, getFormulaWithBrickField(BrickField.DURATION_IN_SECONDS));
+				FormulaEditorFragment.showFragment(view, this, BrickField.DURATION_IN_SECONDS);
 				break;
 		}
-
 	}
 
 	@Override
@@ -236,5 +230,9 @@ public class GlideToBrick extends FormulaBrick implements OnClickListener {
 				getFormulaWithBrickField(BrickField.Y_DESTINATION),
 				getFormulaWithBrickField(BrickField.DURATION_IN_SECONDS)));
 		return null;
+	}
+
+	public void showFormulaEditorToEditFormula(View view) {
+		FormulaEditorFragment.showFragment(view, this, BrickField.X_DESTINATION);
 	}
 }

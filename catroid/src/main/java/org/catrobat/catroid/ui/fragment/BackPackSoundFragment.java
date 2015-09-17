@@ -1,6 +1,6 @@
 /*
  * Catroid: An on-device visual programming system for Android devices
- * Copyright (C) 2010-2014 The Catrobat Team
+ * Copyright (C) 2010-2015 The Catrobat Team
  * (<http://developer.catrobat.org/credits>)
  *
  * This program is free software: you can redistribute it and/or modify
@@ -56,7 +56,6 @@ import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.actionbarsherlock.view.ActionMode;
 import com.actionbarsherlock.view.Menu;
@@ -73,6 +72,7 @@ import org.catrobat.catroid.ui.controller.BackPackListManager;
 import org.catrobat.catroid.ui.controller.SoundController;
 import org.catrobat.catroid.ui.dialogs.CustomAlertDialogBuilder;
 import org.catrobat.catroid.ui.dialogs.DeleteSoundDialog;
+import org.catrobat.catroid.utils.ToastUtil;
 import org.catrobat.catroid.utils.Utils;
 
 public class BackPackSoundFragment extends BackPackActivityFragment implements SoundBaseAdapter.OnSoundEditListener,
@@ -126,7 +126,6 @@ public class BackPackSoundFragment extends BackPackActivityFragment implements S
 				false, this);
 		adapter.setOnSoundEditListener(this);
 		setListAdapter(adapter);
-
 	}
 
 	@Override
@@ -162,8 +161,7 @@ public class BackPackSoundFragment extends BackPackActivityFragment implements S
 				SoundController.getInstance().copySound(selectedSoundInfoBackPack,
 						BackPackListManager.getCurrentSoundInfoArrayList(), BackPackListManager.getCurrentAdapter());
 				String textForUnPacking = getResources().getQuantityString(R.plurals.unpacking_items_plural, 1);
-				Toast.makeText(getActivity(), selectedSoundInfoBackPack.getTitle() + " " + textForUnPacking,
-						Toast.LENGTH_SHORT).show();
+				ToastUtil.showSuccess(getActivity(), selectedSoundInfoBackPack.getTitle() + " " + textForUnPacking);
 				break;
 			case R.id.context_menu_delete:
 				showConfirmDeleteDialog();
@@ -200,7 +198,6 @@ public class BackPackSoundFragment extends BackPackActivityFragment implements S
 				.getApplicationContext());
 
 		setShowDetails(settings.getBoolean(SoundController.SHARED_PREFERENCE_NAME, false));
-
 	}
 
 	@Override
@@ -220,7 +217,6 @@ public class BackPackSoundFragment extends BackPackActivityFragment implements S
 
 		editor.putBoolean(SoundController.SHARED_PREFERENCE_NAME, getShowDetails());
 		editor.commit();
-
 	}
 
 	@Override
@@ -298,12 +294,10 @@ public class BackPackSoundFragment extends BackPackActivityFragment implements S
 
 	@Override
 	public void onLoadFinished(Loader<Cursor> arg0, Cursor arg1) {
-
 	}
 
 	@Override
 	public void onLoaderReset(Loader<Cursor> arg0) {
-
 	}
 
 	@Override
@@ -382,7 +376,6 @@ public class BackPackSoundFragment extends BackPackActivityFragment implements S
 			adapter.setShowDetails(showDetails);
 			adapter.notifyDataSetChanged();
 		}
-
 	}
 
 	@Override
@@ -477,7 +470,6 @@ public class BackPackSoundFragment extends BackPackActivityFragment implements S
 			unregisterForContextMenu(listView);
 			BottomBar.hideBottomBar(getActivity());
 		}
-
 	}
 
 	private ActionMode.Callback deleteModeCallBack = new ActionMode.Callback() {
@@ -557,7 +549,7 @@ public class BackPackSoundFragment extends BackPackActivityFragment implements S
 	private void showUnpackingConfirmationMessage() {
 		String messageForUser = getResources().getQuantityString(R.plurals.unpacking_items_plural,
 				adapter.getAmountOfCheckedItems());
-		Toast.makeText(getActivity(), messageForUser, Toast.LENGTH_SHORT).show();
+		ToastUtil.showSuccess(getActivity(), messageForUser);
 	}
 
 	public BackPackSoundAdapter getAdapter() {

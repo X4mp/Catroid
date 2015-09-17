@@ -1,6 +1,6 @@
 /*
  * Catroid: An on-device visual programming system for Android devices
- * Copyright (C) 2010-2014 The Catrobat Team
+ * Copyright (C) 2010-2015 The Catrobat Team
  * (<http://developer.catrobat.org/credits>)
  *
  * This program is free software: you can redistribute it and/or modify
@@ -21,7 +21,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 package org.catrobat.catroid.drone;
-
 
 import org.catrobat.catroid.content.Sprite;
 import org.catrobat.catroid.content.bricks.BrickBaseType;
@@ -89,8 +88,6 @@ public final class DroneBrickFactory {
 
 			default:
 				return null;
-
 		}
 	}
-
 }

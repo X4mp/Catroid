@@ -1,6 +1,6 @@
 /*
  * Catroid: An on-device visual programming system for Android devices
- * Copyright (C) 2010-2014 The Catrobat Team
+ * Copyright (C) 2010-2015 The Catrobat Team
  * (<http://developer.catrobat.org/credits>)
  *
  * This program is free software: you can redistribute it and/or modify
@@ -22,20 +22,25 @@
  */
 package org.catrobat.catroid.content;
 
-import org.catrobat.catroid.content.bricks.Brick;
-import org.catrobat.catroid.content.bricks.IfLogicEndBrick;
-import org.catrobat.catroid.content.bricks.LoopEndBrick;
+import org.catrobat.catroid.ProjectManager;
 import org.catrobat.catroid.content.bricks.ScriptBrick;
+import org.catrobat.catroid.content.bricks.UserBrick;
+import org.catrobat.catroid.content.bricks.UserScriptDefinitionBrick;
 import org.catrobat.catroid.content.bricks.WhenStartedBrick;
 
-import java.util.ArrayList;
+import java.util.List;
 
 public class StartScript extends Script {
 
 	private static final long serialVersionUID = 1L;
+	private boolean isUserScript;
 
 	public StartScript() {
 		super();
+	}
+
+	public StartScript(boolean isUserScript) {
+		this.isUserScript = isUserScript;
 	}
 
 	public StartScript(WhenStartedBrick brick) {
@@ -51,28 +56,25 @@ public class StartScript extends Script {
 	@Override
 	public ScriptBrick getScriptBrick() {
 		if (brick == null) {
-			brick = new WhenStartedBrick(this);
+			if (!isUserScript) {
+				brick = new WhenStartedBrick(this);
+			} else {
+				brick = ProjectManager.getInstance().getCurrentUserBrick().getDefinitionBrick();
+				if (brick == null) {
+					brick = new UserScriptDefinitionBrick(ProjectManager.getInstance().getCurrentUserBrick());
+				}
+			}
 		}
 
 		return brick;
 	}
 
 	@Override
-	public Script copyScriptForSprite(Sprite sprite) {
-		Script cloneScript = new StartScript();
-		ArrayList<Brick> cloneBrickList = cloneScript.getBrickList();
+	public Script copyScriptForSprite(Sprite copySprite, List<UserBrick> preCopiedUserBricks) {
 
-		for (Brick brick : getBrickList()) {
-			Brick copiedBrick = brick.copyBrickForSprite(sprite);
-			if (copiedBrick instanceof IfLogicEndBrick) {
-				setIfBrickReferences((IfLogicEndBrick) copiedBrick, (IfLogicEndBrick) brick);
-			} else if (copiedBrick instanceof LoopEndBrick) {
-				setLoopBrickReferences((LoopEndBrick) copiedBrick, (LoopEndBrick) brick);
-			}
-			cloneBrickList.add(copiedBrick);
-		}
+		Script cloneScript = new StartScript(isUserScript);
 
+		doCopy(copySprite, cloneScript, preCopiedUserBricks);
 		return cloneScript;
 	}
-
 }

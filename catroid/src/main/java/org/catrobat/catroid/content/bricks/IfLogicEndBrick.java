@@ -1,6 +1,6 @@
 /*
  * Catroid: An on-device visual programming system for Android devices
- * Copyright (C) 2010-2014 The Catrobat Team
+ * Copyright (C) 2010-2015 The Catrobat Team
  * (<http://developer.catrobat.org/credits>)
  *
  * This program is free software: you can redistribute it and/or modify
@@ -116,8 +116,7 @@ public class IfLogicEndBrick extends BrickBaseType implements NestingBrick, Allo
 			TextView ifEndLabel = (TextView) view.findViewById(R.id.brick_if_end_if_label);
 			ifEndLabel.setTextColor(ifEndLabel.getTextColors().withAlpha(alphaValue));
 
-			this.alphaValue = (alphaValue);
-
+			this.alphaValue = alphaValue;
 		}
 
 		return view;
@@ -135,20 +134,12 @@ public class IfLogicEndBrick extends BrickBaseType implements NestingBrick, Allo
 
 	@Override
 	public boolean isDraggableOver(Brick brick) {
-		if (brick == ifElseBrick) {
-			return false;
-		} else {
-			return true;
-		}
+		return brick != ifElseBrick;
 	}
 
 	@Override
 	public boolean isInitialized() {
-		if (ifElseBrick == null) {
-			return false;
-		} else {
-			return true;
-		}
+		return ifElseBrick != null;
 	}
 
 	@Override
@@ -197,5 +188,4 @@ public class IfLogicEndBrick extends BrickBaseType implements NestingBrick, Allo
 		copyBrick.ifElseBrick = null;
 		return copyBrick;
 	}
-
 }

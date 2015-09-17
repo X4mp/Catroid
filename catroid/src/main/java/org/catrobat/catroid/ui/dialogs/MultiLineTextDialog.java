@@ -1,6 +1,6 @@
 /*
  * Catroid: An on-device visual programming system for Android devices
- * Copyright (C) 2010-2014 The Catrobat Team
+ * Copyright (C) 2010-2015 The Catrobat Team
  * (<http://developer.catrobat.org/credits>)
  *
  * This program is free software: you can redistribute it and/or modify
@@ -86,16 +86,20 @@ public abstract class MultiLineTextDialog extends DialogFragment {
 		dialog.setOnShowListener(new OnShowListener() {
 			@Override
 			public void onShow(DialogInterface dialog) {
-				Button buttonPositive = ((AlertDialog) getDialog()).getButton(DialogInterface.BUTTON_POSITIVE);
-				buttonPositive.setEnabled(getPositiveButtonEnabled());
+				if (getDialog() == null) {
+					dismiss();
+				} else {
+					Button buttonPositive = ((AlertDialog) getDialog()).getButton(DialogInterface.BUTTON_POSITIVE);
+					buttonPositive.setEnabled(getPositiveButtonEnabled());
 
-				setPositiveButtonClickCustomListener();
+					setPositiveButtonClickCustomListener();
 
-				InputMethodManager inputManager = (InputMethodManager) getActivity().getSystemService(
-						Context.INPUT_METHOD_SERVICE);
-				inputManager.showSoftInput(input, InputMethodManager.SHOW_IMPLICIT);
+					InputMethodManager inputManager = (InputMethodManager) getActivity().getSystemService(
+							Context.INPUT_METHOD_SERVICE);
+					inputManager.showSoftInput(input, InputMethodManager.SHOW_IMPLICIT);
 
-				initTextChangedListener();
+					initTextChangedListener();
+				}
 			}
 		});
 

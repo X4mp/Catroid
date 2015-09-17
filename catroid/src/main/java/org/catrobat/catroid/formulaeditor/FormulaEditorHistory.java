@@ -1,6 +1,6 @@
 /*
  * Catroid: An on-device visual programming system for Android devices
- * Copyright (C) 2010-2014 The Catrobat Team
+ * Copyright (C) 2010-2015 The Catrobat Team
  * (<http://developer.catrobat.org/credits>)
  *
  * This program is free software: you can redistribute it and/or modify
@@ -52,7 +52,6 @@ public class FormulaEditorHistory {
 		if (undoStack.size() > MAXIMUM_HISTORY_LENGTH) {
 			undoStack.removeElementAt(0);
 		}
-
 	}
 
 	public InternFormulaState backward() {
@@ -88,10 +87,6 @@ public class FormulaEditorHistory {
 		hasUnsavedChanges = false;
 	}
 
-	public InternFormulaState getCurrentState() {
-		return current;
-	}
-
 	public void updateCurrentCursor(int cursorPosition) {
 		current.setExternCursorPosition(cursorPosition);
 	}
@@ -111,5 +106,4 @@ public class FormulaEditorHistory {
 	public void changesSaved() {
 		hasUnsavedChanges = false;
 	}
-
 }

@@ -1,6 +1,6 @@
 /*
  * Catroid: An on-device visual programming system for Android devices
- * Copyright (C) 2010-2014 The Catrobat Team
+ * Copyright (C) 2010-2015 The Catrobat Team
  * (<http://developer.catrobat.org/credits>)
  *
  * This program is free software: you can redistribute it and/or modify
@@ -41,7 +41,6 @@ public class DroneTakeOffBrick extends BrickBaseType {
 	private static final long serialVersionUID = 1L;
 
 	public DroneTakeOffBrick() {
-
 	}
 
 	@Override
@@ -92,7 +91,7 @@ public class DroneTakeOffBrick extends BrickBaseType {
 			View layout = view.findViewById(R.id.brick_drone_takeoff);
 			Drawable background = layout.getBackground();
 			background.setAlpha(alphaValue);
-			this.alphaValue = (alphaValue);
+			this.alphaValue = alphaValue;
 		}
 		return view;
 	}

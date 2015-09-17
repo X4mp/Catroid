@@ -1,6 +1,6 @@
 /*
  * Catroid: An on-device visual programming system for Android devices
- * Copyright (C) 2010-2014 The Catrobat Team
+ * Copyright (C) 2010-2015 The Catrobat Team
  * (<http://developer.catrobat.org/credits>)
  *
  * This program is free software: you can redistribute it and/or modify
@@ -124,6 +124,8 @@ public class BroadcastWaitBrick extends BroadcastBrick implements BroadcastMessa
 		Spinner broadcastWaitSpinner = (Spinner) prototypeView.findViewById(R.id.brick_broadcast_wait_spinner);
 		broadcastWaitSpinner.setFocusableInTouchMode(false);
 		broadcastWaitSpinner.setFocusable(false);
+		broadcastWaitSpinner.setEnabled(false);
+
 		SpinnerAdapter broadcastWaitSpinnerAdapter = MessageContainer.getMessageAdapter(context);
 		broadcastWaitSpinner.setAdapter(broadcastWaitSpinnerAdapter);
 		setSpinnerSelection(broadcastWaitSpinner);
@@ -148,8 +150,7 @@ public class BroadcastWaitBrick extends BroadcastBrick implements BroadcastMessa
 				((TextView) adapterView.getChildAt(0)).setTextColor(color);
 			}
 
-			this.alphaValue = (alphaValue);
-
+			this.alphaValue = alphaValue;
 		}
 
 		return view;

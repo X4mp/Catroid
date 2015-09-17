@@ -1,6 +1,6 @@
 /*
  * Catroid: An on-device visual programming system for Android devices
- * Copyright (C) 2010-2014 The Catrobat Team
+ * Copyright (C) 2010-2015 The Catrobat Team
  * (<http://developer.catrobat.org/credits>)
  *
  * This program is free software: you can redistribute it and/or modify
@@ -26,7 +26,6 @@ import android.content.Context;
 import android.graphics.drawable.Drawable;
 import android.util.Log;
 import android.view.View;
-import android.view.View.OnClickListener;
 import android.widget.BaseAdapter;
 import android.widget.CompoundButton;
 import android.widget.CompoundButton.OnCheckedChangeListener;
@@ -36,9 +35,7 @@ import com.badlogic.gdx.scenes.scene2d.actions.SequenceAction;
 
 import org.catrobat.catroid.ProjectManager;
 import org.catrobat.catroid.R;
-
 import org.catrobat.catroid.common.BrickValues;
-
 import org.catrobat.catroid.content.Sprite;
 import org.catrobat.catroid.formulaeditor.Formula;
 import org.catrobat.catroid.formulaeditor.InterpretationException;
@@ -47,7 +44,7 @@ import org.catrobat.catroid.utils.Utils;
 
 import java.util.List;
 
-public abstract class DroneMoveBrick extends FormulaBrick implements OnClickListener {
+public abstract class DroneMoveBrick extends FormulaBrick {
 
 	protected transient View prototypeView;
 	private static final long serialVersionUID = 1L;
@@ -118,11 +115,9 @@ public abstract class DroneMoveBrick extends FormulaBrick implements OnClickList
 				times.setText(view.getResources().getQuantityString(R.plurals.second_plural,
 						Utils.convertDoubleToPluralInteger(getFormulaWithBrickField(BrickField.DRONE_TIME_TO_FLY_IN_SECONDS)
 								.interpretDouble(ProjectManager.getInstance().getCurrentSprite()))));
-		} catch (InterpretationException interpretationException) {
-			Log.d(getClass().getSimpleName(), "Formula interpretation for this specific Brick failed.", interpretationException);
-		}
-
-
+			} catch (InterpretationException interpretationException) {
+				Log.d("DroneMoveBrick", "Formula interpretation for this specific Brick failed.", interpretationException);
+			}
 		} else {
 			// Random Number to get into the "other" keyword for values like 0.99 or 2.001 seconds or degrees
 			// in hopefully all possible languages
@@ -157,12 +152,12 @@ public abstract class DroneMoveBrick extends FormulaBrick implements OnClickList
 		label.setText(getBrickLabel(prototypeView));
 		TextView textTime = (TextView) prototypeView.findViewById(R.id.brick_drone_move_prototype_text_view_second);
 
-        TextView times = (TextView) prototypeView.findViewById(R.id.brick_drone_move_text_view_second);
-        TextView textPower = (TextView) prototypeView.findViewById(R.id.brick_drone_move_prototype_text_view_power);
-        textTime.setText(String.valueOf(BrickValues.DRONE_MOVE_BRICK_DEFAULT_TIME_MILLISECONDS / 1000));
-        times.setText(context.getResources().getQuantityString(R.plurals.second_plural,
-                    Utils.convertDoubleToPluralInteger(BrickValues.DRONE_MOVE_BRICK_DEFAULT_TIME_MILLISECONDS / 1000)));
-        textPower.setText(String.valueOf(BrickValues.DRONE_MOVE_BRICK_DEFAULT_MOVE_POWER_PERCENT * 100));
+		TextView times = (TextView) prototypeView.findViewById(R.id.brick_drone_move_text_view_second);
+		TextView textPower = (TextView) prototypeView.findViewById(R.id.brick_drone_move_prototype_text_view_power);
+		textTime.setText(String.valueOf(BrickValues.DRONE_MOVE_BRICK_DEFAULT_TIME_MILLISECONDS / 1000));
+		times.setText(context.getResources().getQuantityString(R.plurals.second_plural,
+				Utils.convertDoubleToPluralInteger(BrickValues.DRONE_MOVE_BRICK_DEFAULT_TIME_MILLISECONDS / 1000)));
+		textPower.setText(String.valueOf(BrickValues.DRONE_MOVE_BRICK_DEFAULT_MOVE_POWER_PERCENT * 100));
 		return prototypeView;
 	}
 
@@ -194,7 +189,7 @@ public abstract class DroneMoveBrick extends FormulaBrick implements OnClickList
 			textPercent.setTextColor(textPercent.getTextColors().withAlpha(alphaValue));
 			editPower.getBackground().setAlpha(alphaValue);
 
-			this.alphaValue = (alphaValue);
+			this.alphaValue = alphaValue;
 		}
 		return view;
 	}
@@ -204,16 +199,13 @@ public abstract class DroneMoveBrick extends FormulaBrick implements OnClickList
 		if (checkbox.getVisibility() == View.VISIBLE) {
 			return;
 		}
-
 		switch (view.getId()) {
 			case R.id.brick_drone_move_edit_text_second:
-				FormulaEditorFragment.showFragment(view, this,
-						getFormulaWithBrickField(BrickField.DRONE_TIME_TO_FLY_IN_SECONDS));
+				FormulaEditorFragment.showFragment(view, this, BrickField.DRONE_TIME_TO_FLY_IN_SECONDS);
 				break;
 
 			case R.id.brick_drone_move_edit_text_power:
-				FormulaEditorFragment.showFragment(view, this,
-						getFormulaWithBrickField(BrickField.DRONE_POWER_IN_PERCENT));
+				FormulaEditorFragment.showFragment(view, this, BrickField.DRONE_POWER_IN_PERCENT);
 				break;
 
 			default:
@@ -224,5 +216,10 @@ public abstract class DroneMoveBrick extends FormulaBrick implements OnClickList
 	@Override
 	public int getRequiredResources() {
 		return super.getRequiredResources() | Brick.ARDRONE_SUPPORT;
+	}
+
+	@Override
+	public void showFormulaEditorToEditFormula(View view) {
+		FormulaEditorFragment.showFragment(view, this, BrickField.DRONE_TIME_TO_FLY_IN_SECONDS);
 	}
 }

@@ -1,6 +1,6 @@
 /*
  * Catroid: An on-device visual programming system for Android devices
- * Copyright (C) 2010-2014 The Catrobat Team
+ * Copyright (C) 2010-2015 The Catrobat Team
  * (<http://developer.catrobat.org/credits>)
  *
  * This program is free software: you can redistribute it and/or modify
@@ -68,7 +68,6 @@ public final class InternFormulaUtils {
 			}
 
 			functionInternTokenList.add(tempSearchToken);
-
 		} while (tempSearchToken.getInternTokenType() != InternTokenType.FUNCTION_PARAMETERS_BRACKET_OPEN
 				|| nestedFunctionsCounter != 0);
 
@@ -86,7 +85,6 @@ public final class InternFormulaUtils {
 		Collections.reverse(functionInternTokenList);
 
 		return functionInternTokenList;
-
 	}
 
 	public static List<InternToken> getFunctionByParameterDelimiter(List<InternToken> internTokenList,
@@ -122,7 +120,6 @@ public final class InternFormulaUtils {
 			}
 
 			functionInternTokenList.add(tempSearchToken);
-
 		} while (tempSearchToken.getInternTokenType() != InternTokenType.FUNCTION_PARAMETERS_BRACKET_OPEN
 				|| nestedFunctionsCounter != 0);
 
@@ -160,7 +157,6 @@ public final class InternFormulaUtils {
 			}
 
 			functionInternTokenList.add(tempSearchToken);
-
 		} while (tempSearchToken.getInternTokenType() != InternTokenType.FUNCTION_PARAMETERS_BRACKET_CLOSE
 				|| nestedFunctionsCounter != 0);
 
@@ -185,7 +181,6 @@ public final class InternFormulaUtils {
 				functionBracketOpenInternTokenListIndex - 1);
 
 		return functionInternTokenList;
-
 	}
 
 	public static List<InternToken> getFunctionByName(List<InternToken> internTokenList, int functionStartListIndex) {
@@ -236,12 +231,10 @@ public final class InternFormulaUtils {
 			}
 
 			functionInternTokenList.add(tempSearchToken);
-
 		} while (tempSearchToken.getInternTokenType() != InternTokenType.FUNCTION_PARAMETERS_BRACKET_CLOSE
 				|| nestedFunctionsCounter != 0);
 
 		return functionInternTokenList;
-
 	}
 
 	public static List<InternToken> generateTokenListByBracketOpen(List<InternToken> internTokenList,
@@ -277,11 +270,9 @@ public final class InternFormulaUtils {
 			}
 
 			bracketInternTokenListToReturn.add(tempSearchToken);
-
 		} while (tempSearchToken.getInternTokenType() != InternTokenType.BRACKET_CLOSE || nestedBracketsCounter != 0);
 
 		return bracketInternTokenListToReturn;
-
 	}
 
 	public static List<InternToken> generateTokenListByBracketClose(List<InternToken> internTokenList,
@@ -317,7 +308,6 @@ public final class InternFormulaUtils {
 			}
 
 			bracketInternTokenListToReturn.add(tempSearchToken);
-
 		} while (tempSearchToken.getInternTokenType() != InternTokenType.BRACKET_OPEN || nestedBracketsCounter != 0);
 
 		Collections.reverse(bracketInternTokenListToReturn);
@@ -375,7 +365,6 @@ public final class InternFormulaUtils {
 			}
 
 			searchIndex++;
-
 		} while (tempSearchToken.getInternTokenType() != InternTokenType.FUNCTION_PARAMETERS_BRACKET_CLOSE
 				|| nestedFunctionsCounter != 0);
 
@@ -387,13 +376,8 @@ public final class InternFormulaUtils {
 	}
 
 	public static boolean isFunction(List<InternToken> internTokenList) {
-
 		List<InternToken> functionList = getFunctionByName(internTokenList, 0);
-		if (functionList == null || functionList.size() != internTokenList.size()) {
-			return false;
-		}
-
-		return true;
+		return !(functionList == null || functionList.size() != internTokenList.size());
 	}
 
 	private static InternTokenType getFirstInternTokenType(List<InternToken> internTokens) {
@@ -402,7 +386,6 @@ public final class InternFormulaUtils {
 		}
 
 		return internTokens.get(0).getInternTokenType();
-
 	}
 
 	public static boolean isPeriodToken(List<InternToken> internTokens) {
@@ -415,7 +398,6 @@ public final class InternFormulaUtils {
 
 		if (firstInternTokenType == InternTokenType.PERIOD) {
 			return true;
-
 		}
 
 		return false;
@@ -426,14 +408,12 @@ public final class InternFormulaUtils {
 
 		if (firstInternTokenType != null && firstInternTokenType == InternTokenType.FUNCTION_NAME) {
 			return true;
-
 		}
 
 		return false;
 	}
 
 	public static boolean isNumberToken(List<InternToken> internTokens) {
-
 		InternTokenType firstInternTokenType = getFirstInternTokenType(internTokens);
 
 		if (firstInternTokenType != null && internTokens.size() <= 1 && firstInternTokenType == InternTokenType.NUMBER) {
@@ -453,6 +433,23 @@ public final class InternFormulaUtils {
 		return internTokensToReplaceWith;
 	}
 
+	public static List<InternToken> insertOperatorToNumberToken(InternToken numberTokenToBeModified, int externNumberOffset, InternToken operatorToInsert) {
+		List<InternToken> replaceTokenList = new LinkedList<InternToken>();
+		String numberString = numberTokenToBeModified.getTokenStringValue();
+		String leftPart = numberString.substring(0, externNumberOffset);
+		String rightPart = numberString.substring(externNumberOffset);
+
+		InternToken leftNumber = new InternToken(InternTokenType.NUMBER, leftPart);
+		replaceTokenList.add(leftNumber);
+
+		replaceTokenList.add(operatorToInsert);
+
+		InternToken rightNumber = new InternToken(InternTokenType.NUMBER, rightPart);
+		replaceTokenList.add(rightNumber);
+
+		return replaceTokenList;
+	}
+
 	public static InternToken insertIntoNumberToken(InternToken numberTokenToBeModified, int externNumberOffset,
 			String numberToInsert) {
 		String numberString = numberTokenToBeModified.getTokenStringValue();
@@ -462,7 +459,6 @@ public final class InternFormulaUtils {
 		numberTokenToBeModified.setTokenStringValue(leftPart + numberToInsert + rightPart);
 
 		return numberTokenToBeModified;
-
 	}
 
 	public static List<InternToken> replaceFunctionButKeepParameters(List<InternToken> functionToReplace,
@@ -492,13 +488,11 @@ public final class InternFormulaUtils {
 			if (index < functionParameterCount - 1) {
 				replacedParametersFunction.add(new InternToken(InternTokenType.FUNCTION_PARAMETER_DELIMITER));
 			}
-
 		}
 
 		replacedParametersFunction.add(new InternToken(InternTokenType.FUNCTION_PARAMETERS_BRACKET_CLOSE));
 
 		return replacedParametersFunction;
-
 	}
 
 	static int getFunctionParameterCount(List<InternToken> functionInternTokenList) {
@@ -540,7 +534,6 @@ public final class InternFormulaUtils {
 			}
 
 			searchIndex++;
-
 		} while (tempSearchToken.getInternTokenType() != InternTokenType.FUNCTION_PARAMETERS_BRACKET_CLOSE
 				|| nestedFunctionsCounter != 0);
 		return functionParameterCount;
@@ -609,7 +602,6 @@ public final class InternFormulaUtils {
 					}
 					break;
 			}
-
 		}
 		return true;
 	}
@@ -626,5 +618,4 @@ public final class InternFormulaUtils {
 		}
 		return false;
 	}
-
 }

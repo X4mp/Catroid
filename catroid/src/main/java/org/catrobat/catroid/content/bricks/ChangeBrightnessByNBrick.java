@@ -1,6 +1,6 @@
 /*
  * Catroid: An on-device visual programming system for Android devices
- * Copyright (C) 2010-2014 The Catrobat Team
+ * Copyright (C) 2010-2015 The Catrobat Team
  * (<http://developer.catrobat.org/credits>)
  *
  * This program is free software: you can redistribute it and/or modify
@@ -25,7 +25,6 @@ package org.catrobat.catroid.content.bricks;
 import android.content.Context;
 import android.graphics.drawable.Drawable;
 import android.view.View;
-import android.view.View.OnClickListener;
 import android.widget.BaseAdapter;
 import android.widget.CompoundButton;
 import android.widget.CompoundButton.OnCheckedChangeListener;
@@ -34,9 +33,7 @@ import android.widget.TextView;
 import com.badlogic.gdx.scenes.scene2d.actions.SequenceAction;
 
 import org.catrobat.catroid.R;
-
 import org.catrobat.catroid.common.BrickValues;
-
 import org.catrobat.catroid.content.Sprite;
 import org.catrobat.catroid.content.actions.ExtendedActions;
 import org.catrobat.catroid.formulaeditor.Formula;
@@ -44,7 +41,7 @@ import org.catrobat.catroid.ui.fragment.FormulaEditorFragment;
 
 import java.util.List;
 
-public class ChangeBrightnessByNBrick extends FormulaBrick implements OnClickListener {
+public class ChangeBrightnessByNBrick extends FormulaBrick {
 	private static final long serialVersionUID = 1L;
 
 	private transient View prototypeView;
@@ -107,7 +104,7 @@ public class ChangeBrightnessByNBrick extends FormulaBrick implements OnClickLis
 		prototypeView = View.inflate(context, R.layout.brick_change_brightness, null);
 		TextView textChangeBrightness = (TextView) prototypeView
 				.findViewById(R.id.brick_change_brightness_prototype_text_view);
-        textChangeBrightness.setText(String.valueOf(BrickValues.CHANGE_BRITHNESS_BY));
+		textChangeBrightness.setText(String.valueOf(BrickValues.CHANGE_BRITHNESS_BY));
 		return prototypeView;
 	}
 
@@ -128,19 +125,10 @@ public class ChangeBrightnessByNBrick extends FormulaBrick implements OnClickLis
 			editBrightness.setTextColor(editBrightness.getTextColors().withAlpha(alphaValue));
 			editBrightness.getBackground().setAlpha(alphaValue);
 
-			this.alphaValue = (alphaValue);
-
+			this.alphaValue = alphaValue;
 		}
 
 		return view;
-	}
-
-	@Override
-	public void onClick(View view) {
-		if (checkbox.getVisibility() == View.VISIBLE) {
-			return;
-		}
-		FormulaEditorFragment.showFragment(view, this, getFormulaWithBrickField(BrickField.BRIGHTNESS_CHANGE));
 	}
 
 	@Override
@@ -148,5 +136,10 @@ public class ChangeBrightnessByNBrick extends FormulaBrick implements OnClickLis
 		sequence.addAction(ExtendedActions.changeBrightnessByN(sprite,
 				getFormulaWithBrickField(BrickField.BRIGHTNESS_CHANGE)));
 		return null;
+	}
+
+	@Override
+	public void showFormulaEditorToEditFormula(View view) {
+		FormulaEditorFragment.showFragment(view, this, BrickField.BRIGHTNESS_CHANGE);
 	}
 }

@@ -1,6 +1,6 @@
 /*
  * Catroid: An on-device visual programming system for Android devices
- * Copyright (C) 2010-2014 The Catrobat Team
+ * Copyright (C) 2010-2015 The Catrobat Team
  * (<http://developer.catrobat.org/credits>)
  *
  * This program is free software: you can redistribute it and/or modify
@@ -50,10 +50,10 @@ public class IfLogicAction extends Action {
 			Double interpretation = ifCondition.interpretDouble(sprite);
 			ifConditionValue = interpretation.intValue() != 0 ? true : false;
 			isInterpretedCorrectly = true;
-        } catch (InterpretationException interpretationException) {
-            isInterpretedCorrectly = false;
-            Log.d(getClass().getSimpleName(), "Formula interpretation for this specific Brick failed.", interpretationException);
-        }
+		} catch (InterpretationException interpretationException) {
+			isInterpretedCorrectly = false;
+			Log.d(getClass().getSimpleName(), "Formula interpretation for this specific Brick failed.", interpretationException);
+		}
 	}
 
 	@Override
@@ -104,5 +104,4 @@ public class IfLogicAction extends Action {
 		ifAction.setActor(actor);
 		elseAction.setActor(actor);
 	}
-
 }

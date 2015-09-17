@@ -1,6 +1,6 @@
 /*
  * Catroid: An on-device visual programming system for Android devices
- * Copyright (C) 2010-2014 The Catrobat Team
+ * Copyright (C) 2010-2015 The Catrobat Team
  * (<http://developer.catrobat.org/credits>)
  *
  * This program is free software: you can redistribute it and/or modify
@@ -74,7 +74,6 @@ public class PointToBrick extends BrickBaseType {
 	}
 
 	public PointToBrick() {
-
 	}
 
 	@Override
@@ -188,6 +187,8 @@ public class PointToBrick extends BrickBaseType {
 		Spinner pointToSpinner = (Spinner) view.findViewById(R.id.brick_point_to_spinner);
 		pointToSpinner.setFocusableInTouchMode(false);
 		pointToSpinner.setFocusable(false);
+		pointToSpinner.setEnabled(false);
+
 		SpinnerAdapter pointToSpinnerAdapter = getArrayAdapterFromSpriteList(context);
 		pointToSpinner.setAdapter(pointToSpinnerAdapter);
 		setSpinnerSelection(pointToSpinner);

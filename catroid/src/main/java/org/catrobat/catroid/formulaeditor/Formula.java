@@ -1,6 +1,6 @@
 /*
  * Catroid: An on-device visual programming system for Android devices
- * Copyright (C) 2010-2014 The Catrobat Team
+ * Copyright (C) 2010-2015 The Catrobat Team
  * (<http://developer.catrobat.org/credits>)
  *
  * This program is free software: you can redistribute it and/or modify
@@ -87,6 +87,12 @@ public class Formula implements Serializable {
 		}
 	}
 
+	public void updateVariableReferences(String oldName, String newName, Context context) {
+		internFormula.updateVariableReferences(oldName, newName, context);
+		formulaTree.updateVariableReferences(oldName, newName);
+		displayText = null;
+	}
+
 	public Formula(String value) {
 		formulaTree = new FormulaElement(ElementType.STRING, value, null);
 		internFormula = new InternFormula(formulaTree.getInternTokenList());
@@ -96,9 +102,9 @@ public class Formula implements Serializable {
 		displayText = text;
 	}
 
-	public Boolean interpretBoolean(Sprite sprite) throws InterpretationException{
+	public Boolean interpretBoolean(Sprite sprite) throws InterpretationException {
 		int result = interpretDouble(sprite).intValue();
-		return result != 0 ? true : false;
+		return result != 0;
 	}
 
 	public Integer interpretInteger(Sprite sprite) throws InterpretationException {
@@ -107,30 +113,42 @@ public class Formula implements Serializable {
 	}
 
 	public Double interpretDouble(Sprite sprite) throws InterpretationException {
-        try{
-            Double returnValue = (Double) formulaTree.interpretRecursive(sprite);
-            if (returnValue.isNaN()) {
-                throw new InterpretationException("NaN in interpretDouble()");
-            }
-            return returnValue;
-        }catch(ClassCastException classCastException){
-            throw new InterpretationException("Couldn't interpret Formula.", classCastException);
-        }
+		try {
+			Object returnValue = formulaTree.interpretRecursive(sprite);
+			Double doubleReturnValue;
+			if (returnValue instanceof String) {
+				doubleReturnValue = Double.valueOf((String) returnValue);
+				if (doubleReturnValue.isNaN()) {
+					throw new InterpretationException("NaN in interpretDouble()");
+				}
+				return doubleReturnValue;
+			} else {
+				doubleReturnValue = (Double) returnValue;
+				if (doubleReturnValue.isNaN()) {
+					throw new InterpretationException("NaN in interpretDouble()");
+				}
+				return (Double) returnValue;
+			}
+		} catch (ClassCastException classCastException) {
+			throw new InterpretationException("Couldn't interpret Formula.", classCastException);
+		} catch (NumberFormatException numberFormatException) {
+			throw new InterpretationException("Couldn't interpret Formula.", numberFormatException);
+		}
 	}
 
-	public Float interpretFloat(Sprite sprite) throws InterpretationException{
+	public Float interpretFloat(Sprite sprite) throws InterpretationException {
 		Double returnValue = interpretDouble(sprite);
 		return returnValue.floatValue();
 	}
 
-	public String interpretString(Sprite sprite) throws InterpretationException{
-        Object interpretation = formulaTree.interpretRecursive(sprite);
+	public String interpretString(Sprite sprite) throws InterpretationException {
+		Object interpretation = formulaTree.interpretRecursive(sprite);
 
-        if (interpretation instanceof  Double && ((Double)interpretation).isNaN()) {
-                throw new InterpretationException("NaN in interpretString()");
-        }
+		if (interpretation instanceof Double && ((Double) interpretation).isNaN()) {
+			throw new InterpretationException("NaN in interpretString()");
+		}
 
-        return String.valueOf(interpretation);
+		return String.valueOf(interpretation);
 	}
 
 	public Object interpretObject(Sprite sprite) {
@@ -160,7 +178,6 @@ public class Formula implements Serializable {
 			internFormula.generateExternFormulaStringAndInternExternMapping(context);
 		}
 		return internFormula.getExternFormulaString();
-
 	}
 
 	public void refreshTextField(View view) {
@@ -177,8 +194,8 @@ public class Formula implements Serializable {
 	}
 
 	@SuppressWarnings("deprecation")
-	public void highlightTextField(View brickView, int orientation) {
-		Drawable highlightBackground = null;
+	public void highlightTextField(View brickView) {
+		Drawable highlightBackground;
 		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
 			highlightBackground = brickView.getResources().getDrawable(R.drawable.textfield_pressed_android4);
 		} else {
@@ -187,7 +204,9 @@ public class Formula implements Serializable {
 
 		TextView formulaTextField = (TextView) brickView.findViewById(formulaTextFieldId);
 
-		formulaTextField.setBackgroundDrawable(highlightBackground);
+		if (formulaTextField != null) {
+			formulaTextField.setBackgroundDrawable(highlightBackground);
+		}
 	}
 
 	public void prepareToRemove() {
@@ -199,11 +218,7 @@ public class Formula implements Serializable {
 	}
 
 	public boolean containsElement(FormulaElement.ElementType elementType) {
-		if (formulaTree.containsElement(elementType)) {
-			return true;
-		}
-
-		return false;
+		return formulaTree.containsElement(elementType);
 	}
 
 	public boolean isSingleNumberFormula() {
@@ -219,40 +234,43 @@ public class Formula implements Serializable {
 		return new Formula(0);
 	}
 
+	public void removeVariableReferences(String name, Context context) {
+		internFormula.removeVariableReferences(name, context);
+	}
+
 	public int getRequiredResources() {
 		return formulaTree.getRequiredResources();
 	}
 
 	public String getResultForComputeDialog(Context context) {
-
 		Sprite sprite = ProjectManager.getInstance().getCurrentSprite();
 
 		if (formulaTree.isLogicalOperator()) {
-            boolean result;
-            try{
-                result = this.interpretBoolean(sprite);
-            }catch (InterpretationException interpretationException){
-                return "ERROR";
-            }
+			boolean result;
+			try {
+				result = this.interpretBoolean(sprite);
+			} catch (InterpretationException interpretationException) {
+				return "ERROR";
+			}
 			int logicalFormulaResultIdentifier = result ? R.string.formula_editor_true : R.string.formula_editor_false;
 			return context.getString(logicalFormulaResultIdentifier);
-		} else if (formulaTree.hasFunctionStringReturnType() || formulaTree.getElementType() == ElementType.STRING) {
-			try{
-                return interpretString(sprite);
-            }catch (InterpretationException interpretationException){
-                return "ERROR";
-            }
+		} else if (formulaTree.getElementType() == ElementType.STRING) {
+			try {
+				return interpretString(sprite);
+			} catch (InterpretationException interpretationException) {
+				return "ERROR";
+			}
 		} else if (formulaTree.isUserVariableWithTypeString(sprite)) {
-			UserVariablesContainer userVariables = ProjectManager.getInstance().getCurrentProject().getUserVariables();
+			DataContainer userVariables = ProjectManager.getInstance().getCurrentProject().getDataContainer();
 			UserVariable userVariable = userVariables.getUserVariable(formulaTree.getValue(), sprite);
 			return (String) userVariable.getValue();
 		} else {
 			Double interpretationResult;
-            try{
-                interpretationResult = this.interpretDouble(sprite);
-            }catch (InterpretationException interpretationException){
-                return "ERROR";
-            }
+			try {
+				interpretationResult = this.interpretDouble(sprite);
+			} catch (InterpretationException interpretationException) {
+				return "ERROR";
+			}
 			interpretationResult *= 100;
 			interpretationResult = (double) (Math.round(interpretationResult) / 100f);
 			return String.valueOf(interpretationResult);

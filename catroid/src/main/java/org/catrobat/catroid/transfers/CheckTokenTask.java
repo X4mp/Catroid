@@ -1,6 +1,6 @@
 /*
  * Catroid: An on-device visual programming system for Android devices
- * Copyright (C) 2010-2014 The Catrobat Team
+ * Copyright (C) 2010-2015 The Catrobat Team
  * (<http://developer.catrobat.org/credits>)
  *
  * This program is free software: you can redistribute it and/or modify
@@ -75,13 +75,11 @@ public class CheckTokenTask extends AsyncTask<Void, Void, Boolean> {
 			}
 
 			return ServerCalls.getInstance().checkToken(token, username);
-
 		} catch (WebconnectionException webconnectionException) {
 			Log.e(TAG, Log.getStackTraceString(webconnectionException));
 			exception = webconnectionException;
 		}
 		return false;
-
 	}
 
 	@Override
@@ -128,6 +126,5 @@ public class CheckTokenTask extends AsyncTask<Void, Void, Boolean> {
 		void onTokenNotValid(FragmentActivity fragmentActivity);
 
 		void onCheckTokenSuccess(FragmentActivity fragmentActivity);
-
 	}
 }

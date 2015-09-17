@@ -1,6 +1,6 @@
 /*
  * Catroid: An on-device visual programming system for Android devices
- * Copyright (C) 2010-2014 The Catrobat Team
+ * Copyright (C) 2010-2015 The Catrobat Team
  * (<http://developer.catrobat.org/credits>)
  *
  * This program is free software: you can redistribute it and/or modify
@@ -95,7 +95,6 @@ public class MyProjectsActivity extends BaseActivity {
 			case R.id.show_details:
 				handleShowDetails(!projectsListFragment.getShowDetails(), item);
 				break;
-
 		}
 		return super.onOptionsItemSelected(item);
 	}
@@ -108,8 +107,8 @@ public class MyProjectsActivity extends BaseActivity {
 
 	@Override
 	public boolean dispatchKeyEvent(KeyEvent event) {
-		if (projectsListFragment.getActionModeActive()
-				&& event.getKeyCode() == KeyEvent.KEYCODE_BACK && event.getAction() == KeyEvent.ACTION_UP) {
+		if (projectsListFragment.getActionModeActive() && event.getKeyCode() == KeyEvent.KEYCODE_BACK
+				&& event.getAction() == KeyEvent.ACTION_UP) {
 			ProjectAdapter adapter = (ProjectAdapter) projectsListFragment.getListAdapter();
 			adapter.clearCheckedProjects();
 		}
@@ -122,7 +121,7 @@ public class MyProjectsActivity extends BaseActivity {
 			return;
 		}
 		NewProjectDialog dialog = new NewProjectDialog();
-		dialog.setOpenendFromProjectList(true);
+		dialog.setOpenedFromProjectList(true);
 		dialog.show(getSupportFragmentManager(), NewProjectDialog.DIALOG_FRAGMENT_TAG);
 	}
 

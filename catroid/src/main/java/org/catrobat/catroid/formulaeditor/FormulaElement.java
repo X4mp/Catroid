@@ -1,6 +1,6 @@
 /*
  * Catroid: An on-device visual programming system for Android devices
- * Copyright (C) 2010-2014 The Catrobat Team
+ * Copyright (C) 2010-2015 The Catrobat Team
  * (<http://developer.catrobat.org/credits>)
  *
  * This program is free software: you can redistribute it and/or modify
@@ -29,6 +29,7 @@ import org.catrobat.catroid.content.Sprite;
 import org.catrobat.catroid.content.bricks.Brick;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -37,10 +38,11 @@ public class FormulaElement implements Serializable {
 	private static final long serialVersionUID = 1L;
 
 	public static enum ElementType {
-		OPERATOR, FUNCTION, NUMBER, SENSOR, USER_VARIABLE, BRACKET, STRING
+		OPERATOR, FUNCTION, NUMBER, SENSOR, USER_VARIABLE, USER_LIST, BRACKET, STRING
 	}
 
 	public static final Double NOT_EXISTING_USER_VARIABLE_INTERPRETATION_VALUE = 0d;
+	public static final Double NOT_EXISTING_USER_LIST_INTERPRETATION_VALUE = 0d;
 
 	private ElementType type;
 	private String value;
@@ -68,7 +70,6 @@ public class FormulaElement implements Serializable {
 		if (rightChild != null) {
 			this.rightChild.parent = this;
 		}
-
 	}
 
 	public ElementType getElementType() {
@@ -118,6 +119,9 @@ public class FormulaElement implements Serializable {
 			case USER_VARIABLE:
 				internTokenList.add(new InternToken(InternTokenType.USER_VARIABLE, this.value));
 				break;
+			case USER_LIST:
+				internTokenList.add(new InternToken(InternTokenType.USER_LIST, this.value));
+				break;
 			case NUMBER:
 				internTokenList.add(new InternToken(InternTokenType.NUMBER, this.value));
 				break;
@@ -139,6 +143,18 @@ public class FormulaElement implements Serializable {
 		return root;
 	}
 
+	public void updateVariableReferences(String oldName, String newName) {
+		if (leftChild != null) {
+			leftChild.updateVariableReferences(oldName, newName);
+		}
+		if (rightChild != null) {
+			rightChild.updateVariableReferences(oldName, newName);
+		}
+		if (type == ElementType.USER_VARIABLE && value.equals(oldName)) {
+			value = newName;
+		}
+	}
+
 	public Object interpretRecursive(Sprite sprite) {
 
 		Object returnValue = 0d;
@@ -148,7 +164,7 @@ public class FormulaElement implements Serializable {
 				returnValue = rightChild.interpretRecursive(sprite);
 				break;
 			case NUMBER:
-				returnValue = Double.parseDouble(value);
+				returnValue = value;
 				break;
 			case OPERATOR:
 				Operators operator = Operators.getOperatorByValue(value);
@@ -164,15 +180,88 @@ public class FormulaElement implements Serializable {
 			case USER_VARIABLE:
 				returnValue = interpretUserVariable(sprite);
 				break;
+			case USER_LIST:
+				returnValue = interpretUserList(sprite);
+				break;
 			case STRING:
-				returnValue = interpretString(value);
+				returnValue = value;
 				break;
 		}
 		return normalizeDegeneratedDoubleValues(returnValue);
 	}
 
+	private Object interpretUserList(Sprite sprite) {
+		DataContainer dataContainer = ProjectManager.getInstance().getCurrentProject().getDataContainer();
+		UserList userList = dataContainer.getUserList(value, sprite);
+		if (userList == null) {
+			return NOT_EXISTING_USER_LIST_INTERPRETATION_VALUE;
+		}
+
+		List<Object> userListValues = userList.getList();
+
+		if (userListValues.size() == 0) {
+			return 0d;
+		} else if (userListValues.size() == 1) {
+			Object userListValue = userListValues.get(0);
+			if (userListValue instanceof String) {
+				return userListValue;
+			} else {
+				return userListValue;
+			}
+		} else {
+			return interpretMultipleItemsUserList(userListValues);
+		}
+	}
+
+	private Object interpretMultipleItemsUserList(List<Object> userListValues) {
+		List<String> userListStringValues = new ArrayList<String>();
+		boolean concatenateWithoutWhitespace = true;
+
+		for (Object listValue : userListValues) {
+			if (listValue instanceof Double) {
+				Double doubleValueOfListItem = (Double) listValue;
+				if (isNumberAIntegerBetweenZeroAndNine(doubleValueOfListItem)) {
+					userListStringValues.add(doubleValueOfListItem.intValue() + "");
+				} else {
+					concatenateWithoutWhitespace = false;
+					userListStringValues.add(listValue.toString());
+				}
+			} else if (listValue instanceof String) {
+				String stringValueOfListItem = (String) listValue;
+				if (stringValueOfListItem.length() == 1) {
+					userListStringValues.add(stringValueOfListItem);
+				} else {
+					userListStringValues.add(stringValueOfListItem);
+					concatenateWithoutWhitespace = false;
+				}
+			}
+		}
+		String concatenatedList = "";
+		boolean isFirstListItem = true;
+		for (String userListStringValue : userListStringValues) {
+
+			if (!concatenateWithoutWhitespace && !isFirstListItem) {
+				concatenatedList += " ";
+			}
+			if (isFirstListItem) {
+				isFirstListItem = false;
+			}
+			concatenatedList += userListStringValue;
+		}
+		return concatenatedList;
+	}
+
+	private boolean isNumberAIntegerBetweenZeroAndNine(Double valueToCheck) {
+		for (Double index = 0.0; index <= 9.0; index++) {
+			if (valueToCheck.equals(index)) {
+				return true;
+			}
+		}
+		return false;
+	}
+
 	private Object interpretUserVariable(Sprite sprite) {
-		UserVariablesContainer userVariables = ProjectManager.getInstance().getCurrentProject().getUserVariables();
+		DataContainer userVariables = ProjectManager.getInstance().getCurrentProject().getDataContainer();
 		UserVariable userVariable = userVariables.getUserVariable(value, sprite);
 		if (userVariable == null) {
 			return NOT_EXISTING_USER_VARIABLE_INTERPRETATION_VALUE;
@@ -180,11 +269,7 @@ public class FormulaElement implements Serializable {
 
 		Object userVariableValue = userVariable.getValue();
 		if (userVariableValue instanceof String) {
-			try {
-				return interpretString((String) userVariableValue);
-			} catch (NumberFormatException numberFormatException) {
-				return userVariableValue;
-			}
+			return userVariableValue;
 		} else {
 			return userVariableValue;
 		}
@@ -203,76 +288,166 @@ public class FormulaElement implements Serializable {
 		Object left = null;
 		Object right = null;
 
+		Double doubleValueOfLeftChild = null;
+		Double doubleValueOfRightChild = null;
+
 		if (leftChild != null) {
 			left = leftChild.interpretRecursive(sprite);
+			if (left instanceof String) {
+				try {
+					doubleValueOfLeftChild = Double.valueOf((String) left);
+				} catch (NumberFormatException numberFormatException) {
+					Log.d(getClass().getSimpleName(), "Couldn't parse String", numberFormatException);
+				}
+			} else {
+				doubleValueOfLeftChild = (Double) left;
+			}
+		}
+
+		if (rightChild != null) {
+			right = rightChild.interpretRecursive(sprite);
+			if (right instanceof String) {
+				try {
+					doubleValueOfRightChild = Double.valueOf((String) right);
+				} catch (NumberFormatException numberFormatException) {
+					Log.d(getClass().getSimpleName(), "Couldn't parse String", numberFormatException);
+				}
+			} else {
+				doubleValueOfRightChild = (Double) right;
+			}
 		}
 
 		switch (function) {
 			case SIN:
-				return left instanceof String ? 0d : java.lang.Math.sin(Math.toRadians((Double) left));
+				return doubleValueOfLeftChild == null ? 0d : java.lang.Math.sin(Math.toRadians(doubleValueOfLeftChild));
 			case COS:
-				return left instanceof String ? 0d : java.lang.Math.cos(Math.toRadians((Double) left));
+				return doubleValueOfLeftChild == null ? 0d : java.lang.Math.cos(Math.toRadians(doubleValueOfLeftChild));
 			case TAN:
-				return left instanceof String ? 0d : java.lang.Math.tan(Math.toRadians((Double) left));
+				return doubleValueOfLeftChild == null ? 0d : java.lang.Math.tan(Math.toRadians(doubleValueOfLeftChild));
 			case LN:
-				return left instanceof String ? 0d : java.lang.Math.log((Double) left);
+				return doubleValueOfLeftChild == null ? 0d : java.lang.Math.log(doubleValueOfLeftChild);
 			case LOG:
-				return left instanceof String ? 0d : java.lang.Math.log10((Double) left);
+				return doubleValueOfLeftChild == null ? 0d : java.lang.Math.log10(doubleValueOfLeftChild);
 			case SQRT:
-				return left instanceof String ? 0d : java.lang.Math.sqrt((Double) left);
+				return doubleValueOfLeftChild == null ? 0d : java.lang.Math.sqrt(doubleValueOfLeftChild);
 			case RAND:
-				right = rightChild.interpretRecursive(sprite);
-				return interpretFunctionRAND(right, left);
+				return (doubleValueOfLeftChild == null || doubleValueOfRightChild == null) ? 0d : interpretFunctionRand(doubleValueOfLeftChild, doubleValueOfRightChild);
 			case ABS:
-				return left instanceof String ? 0d : java.lang.Math.abs((Double) left);
+				return doubleValueOfLeftChild == null ? 0d : java.lang.Math.abs(doubleValueOfLeftChild);
 			case ROUND:
-				return left instanceof String ? 0d : (double) java.lang.Math.round((Double) left);
+				return doubleValueOfLeftChild == null ? 0d : (double) java.lang.Math.round(doubleValueOfLeftChild);
 			case PI:
 				return java.lang.Math.PI;
 			case MOD:
-				right = rightChild.interpretRecursive(sprite);
-				return interpretFunctionMOD(right, left);
+				return (doubleValueOfLeftChild == null || doubleValueOfRightChild == null) ? 0d : interpretFunctionMod(doubleValueOfLeftChild, doubleValueOfRightChild);
 			case ARCSIN:
-				return left instanceof String ? 0d : java.lang.Math.toDegrees(Math.asin((Double) left));
+				return doubleValueOfLeftChild == null ? 0d : java.lang.Math.toDegrees(Math.asin(doubleValueOfLeftChild));
 			case ARCCOS:
-				return left instanceof String ? 0d : java.lang.Math.toDegrees(Math.acos((Double) left));
+				return doubleValueOfLeftChild == null ? 0d : java.lang.Math.toDegrees(Math.acos(doubleValueOfLeftChild));
 			case ARCTAN:
-				return left instanceof String ? 0d : java.lang.Math.toDegrees(Math.atan((Double) left));
+				return doubleValueOfLeftChild == null ? 0d : java.lang.Math.toDegrees(Math.atan(doubleValueOfLeftChild));
 			case EXP:
-				return left instanceof String ? 0d : java.lang.Math.exp((Double) left);
+				return doubleValueOfLeftChild == null ? 0d : java.lang.Math.exp(doubleValueOfLeftChild);
+			case FLOOR:
+				return doubleValueOfLeftChild == null ? 0d : java.lang.Math.floor(doubleValueOfLeftChild);
+			case CEIL:
+				return doubleValueOfLeftChild == null ? 0d : java.lang.Math.ceil(doubleValueOfLeftChild);
 			case MAX:
-				right = rightChild.interpretRecursive(sprite);
-				return (left instanceof String || right instanceof String) ? 0d : java.lang.Math.max((Double) left,
-						(Double) right);
+				return (doubleValueOfLeftChild == null || doubleValueOfRightChild == null) ? 0d : java.lang.Math.max(doubleValueOfLeftChild,
+						doubleValueOfRightChild);
 			case MIN:
-				right = rightChild.interpretRecursive(sprite);
-				return (left instanceof String || right instanceof String) ? 0d : java.lang.Math.min((Double) left,
-						(Double) right);
+				return (doubleValueOfLeftChild == null || doubleValueOfRightChild == null) ? 0d : java.lang.Math.min(doubleValueOfLeftChild,
+						doubleValueOfRightChild);
 			case TRUE:
 				return 1d;
 			case FALSE:
 				return 0d;
 			case LETTER:
-				right = rightChild.interpretRecursive(sprite);
-				return interpretFunctionLETTER(right, left);
+				return interpretFunctionLetter(right, left);
 			case LENGTH:
-				return interpretFunctionLENGTH(left, sprite);
+				return interpretFunctionLength(left, sprite);
 			case JOIN:
-				return interpretFunctionJOIN(sprite);
+				return interpretFunctionJoin(sprite);
+			case LIST_ITEM:
+				return interpretFunctionListItem(left, sprite);
+			case CONTAINS:
+				return interpretFunctionContains(right, sprite);
+			case NUMBER_OF_ITEMS:
+				return interpretFunctionNumberOfItems(left, sprite);
 		}
 		return 0d;
 	}
 
-	private Object interpretFunctionJOIN(Sprite sprite) {
-		return interpretFunctionJOINParameter(leftChild, sprite)
-				+ interpretFunctionJOINParameter(rightChild, sprite);
+	private Object interpretFunctionNumberOfItems(Object left, Sprite sprite) {
+		if (leftChild.type == ElementType.USER_LIST) {
+			return (double) handleNumberOfItemsOfUserListParameter(sprite);
+		}
+		return interpretFunctionLength(left, sprite);
 	}
 
-	private String interpretFunctionJOINParameter(FormulaElement child, Sprite sprite) {
+	private Object interpretFunctionContains(Object right, Sprite sprite) {
+		if (leftChild.getElementType() == ElementType.USER_LIST) {
+			DataContainer dataContainer = ProjectManager.getInstance().getCurrentProject().getDataContainer();
+			UserList userList = dataContainer.getUserList(leftChild.getValue(), sprite);
+
+			if (userList == null) {
+				return 0d;
+			}
+
+			for (Object userListElement : userList.getList()) {
+				if (interpretOperatorEqual(userListElement, right) == 1d) {
+					return 1d;
+				}
+			}
+		}
+
+		return 0d;
+	}
+
+	private Object interpretFunctionListItem(Object left, Sprite sprite) {
+		UserList userList = null;
+		if (rightChild.getElementType() == ElementType.USER_LIST) {
+			DataContainer dataContainer = ProjectManager.getInstance().getCurrentProject().getDataContainer();
+			userList = dataContainer.getUserList(rightChild.getValue(), sprite);
+		}
+
+		if (userList == null) {
+			return "";
+		}
+
+		int index = 0;
+		if (left instanceof String) {
+			try {
+				Double doubleValueOfLeftChild = Double.valueOf((String) left);
+				index = doubleValueOfLeftChild.intValue();
+			} catch (NumberFormatException numberFormatexception) {
+				Log.d(getClass().getSimpleName(), "Couldn't parse String", numberFormatexception);
+			}
+		} else {
+			index = ((Double) left).intValue();
+		}
+
+		index--;
+
+		if (index < 0) {
+			return "";
+		} else if (index >= userList.getList().size()) {
+			return "";
+		}
+
+		return userList.getList().get(index);
+	}
+
+	private Object interpretFunctionJoin(Sprite sprite) {
+		return interpretInterpretFunctionJoinParameter(leftChild, sprite)
+				+ interpretInterpretFunctionJoinParameter(rightChild, sprite);
+	}
+
+	private String interpretInterpretFunctionJoinParameter(FormulaElement child, Sprite sprite) {
 		String parameterInterpretation = "";
 		if (child != null) {
 			if (child.getElementType() == ElementType.NUMBER) {
-				Double number = ((Double) child.interpretRecursive(sprite));
+				Double number = Double.valueOf((String) child.interpretRecursive(sprite));
 				if (number.isNaN()) {
 					parameterInterpretation = "";
 				} else {
@@ -284,14 +459,14 @@ public class FormulaElement implements Serializable {
 				}
 			} else if (child.getElementType() == ElementType.STRING) {
 				parameterInterpretation = child.value;
-			} else if (child.getElementType() != ElementType.STRING) {
+			} else {
 				parameterInterpretation += child.interpretRecursive(sprite);
 			}
 		}
 		return parameterInterpretation;
 	}
 
-	private Object interpretFunctionLENGTH(Object left, Sprite sprite) {
+	private Object interpretFunctionLength(Object left, Sprite sprite) {
 		if (leftChild == null) {
 			return 0d;
 		}
@@ -304,14 +479,49 @@ public class FormulaElement implements Serializable {
 		if (leftChild.type == ElementType.USER_VARIABLE) {
 			return (double) handleLengthUserVariableParameter(sprite);
 		}
+		if (leftChild.type == ElementType.USER_LIST) {
+			DataContainer dataContainer = ProjectManager.getInstance().getCurrentProject().getDataContainer();
+			UserList userList = dataContainer.getUserList(leftChild.getValue(), sprite);
+			if (userList == null) {
+				return 0d;
+			}
+			if (userList.getList().size() == 0) {
+				return 0d;
+			}
+
+			Object interpretedList = leftChild.interpretRecursive(sprite);
+			if (interpretedList instanceof Double) {
+				Double interpretedListDoubleValue = (Double) interpretedList;
+				if (interpretedListDoubleValue.isNaN() || interpretedListDoubleValue.isInfinite()) {
+					return 0d;
+				}
+				return (double) (String.valueOf(interpretedListDoubleValue.intValue())).length();
+			}
+			if (interpretedList instanceof String) {
+				String interpretedListStringValue = (String) interpretedList;
+				return (double) interpretedListStringValue.length();
+			}
+		}
 		if (left instanceof Double && ((Double) left).isNaN()) {
 			return 0d;
 		}
 		return (double) (String.valueOf(left)).length();
 	}
 
-	private Object interpretFunctionLETTER(Object right, Object left) {
-		int index = ((Double) left).intValue() - 1;
+	private Object interpretFunctionLetter(Object right, Object left) {
+		int index = 0;
+		if (left instanceof String) {
+			try {
+				Double doubleValueOfLeftChild = Double.valueOf((String) left);
+				index = doubleValueOfLeftChild.intValue();
+			} catch (NumberFormatException numberFormatexception) {
+				Log.d(getClass().getSimpleName(), "Couldn't parse String", numberFormatexception);
+			}
+		} else {
+			index = ((Double) left).intValue();
+		}
+
+		index--;
 
 		if (index < 0) {
 			return "";
@@ -321,11 +531,7 @@ public class FormulaElement implements Serializable {
 		return String.valueOf(String.valueOf(right).charAt(index));
 	}
 
-	private Object interpretFunctionMOD(Object right, Object left) {
-
-		if (left instanceof String || right instanceof String) {
-			return 0d;
-		}
+	private Object interpretFunctionMod(Object left, Object right) {
 
 		double dividend = (Double) left;
 		double divisor = (Double) right;
@@ -347,11 +553,7 @@ public class FormulaElement implements Serializable {
 		return dividend % divisor;
 	}
 
-	private Object interpretFunctionRAND(Object right, Object left) {
-		if (left instanceof String || right instanceof String) {
-			return 0d;
-		}
-
+	private Object interpretFunctionRand(Object right, Object left) {
 		Double minimum = java.lang.Math.min((Double) left, (Double) right);
 		Double maximum = java.lang.Math.max((Double) left, (Double) right);
 
@@ -360,14 +562,11 @@ public class FormulaElement implements Serializable {
 		if (isInteger(minimum) && isInteger(maximum)
 				&& !(rightChild.type == ElementType.NUMBER && rightChild.value.contains("."))
 				&& !(leftChild.type == ElementType.NUMBER && leftChild.value.contains("."))) {
-			Log.i("info", "randomDouble: " + randomDouble);
-
 			if ((Math.abs(randomDouble) - (int) Math.abs(randomDouble)) >= 0.5) {
-				return Double.valueOf(randomDouble.intValue()) + 1;
+				return (double) randomDouble.intValue() + 1;
 			} else {
-				return Double.valueOf(randomDouble.intValue());
+				return (double) randomDouble.intValue();
 			}
-
 		} else {
 			return randomDouble;
 		}
@@ -375,19 +574,19 @@ public class FormulaElement implements Serializable {
 
 	private Object interpretOperator(Operators operator, Sprite sprite) {
 
-		if (leftChild != null) {// binary operator
+		if (leftChild != null) { // binary operator
 			Object leftObject;
 			Object rightObject;
 			try {
 				leftObject = leftChild.interpretRecursive(sprite);
 			} catch (NumberFormatException numberFormatException) {
-				leftObject = Double.valueOf(Double.NaN);
+				leftObject = Double.NaN;
 			}
 
 			try {
 				rightObject = rightChild.interpretRecursive(sprite);
 			} catch (NumberFormatException numberFormatException) {
-				rightObject = Double.valueOf(Double.NaN);
+				rightObject = Double.NaN;
 			}
 
 			Double left;
@@ -443,16 +642,20 @@ public class FormulaElement implements Serializable {
 					right = interpretOperator(rightObject);
 					return left != 0d || right != 0d ? 1d : 0d;
 			}
-
-		} else {//unary operators
-			Object right = rightChild.interpretRecursive(sprite);
+		} else { //unary operators
+			Object rightObject;
+			try {
+				rightObject = rightChild.interpretRecursive(sprite);
+			} catch (NumberFormatException numberFormatException) {
+				rightObject = Double.NaN;
+			}
 
 			switch (operator) {
 				case MINUS:
-					Double result = (Double) right;
-					return Double.valueOf(-result.doubleValue());
+					Double result = interpretOperator(rightObject);
+					return -result;
 				case LOGICAL_NOT:
-					return (Double) right == 0d ? 1d : 0d;
+					return interpretOperator(rightObject) == 0d ? 1d : 0d;
 			}
 		}
 		return 0d;
@@ -464,7 +667,7 @@ public class FormulaElement implements Serializable {
 			case OBJECT_BRIGHTNESS:
 				returnValue = (double) sprite.look.getBrightnessInUserInterfaceDimensionUnit();
 				break;
-			case OBJECT_GHOSTEFFECT:
+			case OBJECT_TRANSPARENCY:
 				returnValue = (double) sprite.look.getTransparencyInUserInterfaceDimensionUnit();
 				break;
 			case OBJECT_LAYER:
@@ -484,54 +687,6 @@ public class FormulaElement implements Serializable {
 				break;
 		}
 		return returnValue;
-	}
-
-	private Object interpretString(String value) throws NumberFormatException {
-
-		if (parent == null && type != ElementType.USER_VARIABLE) {
-			Double anotherValue;
-			try {
-				anotherValue = Double.valueOf(value);
-			} catch (NumberFormatException numberFormatException) {
-				return value;
-			}
-			return anotherValue;
-		}
-
-		if (parent != null) {
-			boolean isParentAFunction = Functions.getFunctionByValue(parent.value) != null;
-			if (isParentAFunction && Functions.getFunctionByValue(parent.value).returnType == ElementType.STRING) {
-				if (Functions.getFunctionByValue(parent.value) == Functions.LETTER && parent.leftChild == this) {
-					try {
-						return Double.valueOf(value);
-					} catch (NumberFormatException numberFormatexception) {
-						return Double.valueOf(0);
-					}
-				}
-				return value;
-			}
-
-			if (isParentAFunction) {
-				try {
-					return Double.valueOf(value);
-				} catch (NumberFormatException numberFormatexception) {
-					return value;
-				}
-			}
-
-			boolean isParentAnOperator = Operators.getOperatorByValue(parent.value) != null;
-			if (isParentAnOperator
-					&& (Operators.getOperatorByValue(parent.value) == Operators.EQUAL || Operators
-							.getOperatorByValue(parent.value) == Operators.NOT_EQUAL)) {
-				return value;
-			}
-		}
-
-		if (value.length() == 0) {
-			return Double.valueOf(0.0);
-		}
-
-		return Double.valueOf(value);
 	}
 
 	private Double interpretOperatorEqual(Object left, Object right) {
@@ -594,10 +749,10 @@ public class FormulaElement implements Serializable {
 			return 0.0;
 		}
 
-		if (((Double) valueToCheck).doubleValue() == Double.NEGATIVE_INFINITY) {
+		if ((Double) valueToCheck == Double.NEGATIVE_INFINITY) {
 			return -Double.MAX_VALUE;
 		}
-		if (((Double) valueToCheck).doubleValue() == Double.POSITIVE_INFINITY) {
+		if ((Double) valueToCheck == Double.POSITIVE_INFINITY) {
 			return Double.MAX_VALUE;
 		}
 
@@ -647,27 +802,11 @@ public class FormulaElement implements Serializable {
 	}
 
 	private boolean isInteger(double value) {
-
-		if ((Math.abs(value) - (int) Math.abs(value) < Double.MIN_VALUE)) {
-			return true;
-		}
-
-		return false;
+		return ((Math.abs(value) - (int) Math.abs(value)) < Double.MIN_VALUE);
 	}
 
 	public boolean isLogicalOperator() {
-		if (type == ElementType.OPERATOR) {
-			return Operators.getOperatorByValue(value).isLogicalOperator;
-		}
-		return false;
-	}
-
-	public boolean hasFunctionStringReturnType() {
-		Functions function = Functions.getFunctionByValue(value);
-		if (function == null) {
-			return false;
-		}
-		return function.returnType == ElementType.STRING;
+		return (type == ElementType.OPERATOR) && Operators.getOperatorByValue(value).isLogicalOperator;
 	}
 
 	public boolean containsElement(ElementType elementType) {
@@ -681,28 +820,23 @@ public class FormulaElement implements Serializable {
 
 	public boolean isUserVariableWithTypeString(Sprite sprite) {
 		if (type == ElementType.USER_VARIABLE) {
-			UserVariablesContainer userVariableContainer = ProjectManager.getInstance().getCurrentProject()
-					.getUserVariables();
+			DataContainer userVariableContainer = ProjectManager.getInstance().getCurrentProject()
+					.getDataContainer();
 			UserVariable userVariable = userVariableContainer.getUserVariable(value, sprite);
-
 			Object userVariableValue = userVariable.getValue();
-			if (userVariableValue instanceof String) {
-				return true;
-			} else {
-				return false;
-			}
+			return userVariableValue instanceof String;
 		}
 		return false;
 	}
 
 	private int handleLengthUserVariableParameter(Sprite sprite) {
-		UserVariablesContainer userVariableContainer = ProjectManager.getInstance().getCurrentProject()
-				.getUserVariables();
+		DataContainer userVariableContainer = ProjectManager.getInstance().getCurrentProject()
+				.getDataContainer();
 		UserVariable userVariable = userVariableContainer.getUserVariable(leftChild.value, sprite);
 
 		Object userVariableValue = userVariable.getValue();
 		if (userVariableValue instanceof String) {
-			return (String.valueOf(userVariableValue)).length();
+			return String.valueOf(userVariableValue).length();
 		} else {
 			if (isInteger((Double) userVariableValue)) {
 				return Integer.toString(((Double) userVariableValue).intValue()).length();
@@ -710,16 +844,24 @@ public class FormulaElement implements Serializable {
 				return Double.toString(((Double) userVariableValue)).length();
 			}
 		}
+	}
 
+	private int handleNumberOfItemsOfUserListParameter(Sprite sprite) {
+		DataContainer dataContainer = ProjectManager.getInstance().getCurrentProject()
+				.getDataContainer();
+		UserList userList = dataContainer.getUserList(leftChild.value, sprite);
+
+		if (userList == null) {
+			return 0;
+		}
+
+		return userList.getList().size();
 	}
 
 	public boolean isSingleNumberFormula() {
 		if (type == ElementType.OPERATOR) {
 			Operators operator = Operators.getOperatorByValue(value);
-			if (operator == Operators.MINUS && leftChild == null) {
-				return rightChild.isSingleNumberFormula();
-			}
-			return false;
+			return (operator == Operators.MINUS) && (leftChild == null) && rightChild.isSingleNumberFormula();
 		} else if (type == ElementType.NUMBER) {
 			return true;
 		}
@@ -730,16 +872,16 @@ public class FormulaElement implements Serializable {
 	public FormulaElement clone() {
 		FormulaElement leftChildClone = leftChild == null ? null : leftChild.clone();
 		FormulaElement rightChildClone = rightChild == null ? null : rightChild.clone();
-		return new FormulaElement(type, new String(value == null ? "" : value), null, leftChildClone, rightChildClone);
+		return new FormulaElement(type, value == null ? "" : value, null, leftChildClone, rightChildClone);
 	}
 
 	public int getRequiredResources() {
-		int ressources = Brick.NO_RESOURCES;
+		int resources = Brick.NO_RESOURCES;
 		if (leftChild != null) {
-			ressources |= leftChild.getRequiredResources();
+			resources |= leftChild.getRequiredResources();
 		}
 		if (rightChild != null) {
-			ressources |= rightChild.getRequiredResources();
+			resources |= rightChild.getRequiredResources();
 		}
 		if (type == ElementType.SENSOR) {
 			Sensors sensor = Sensors.getSensorByValue(value);
@@ -748,13 +890,27 @@ public class FormulaElement implements Serializable {
 				case FACE_SIZE:
 				case FACE_X_POSITION:
 				case FACE_Y_POSITION:
-					ressources |= Brick.FACE_DETECTION;
+					resources |= Brick.FACE_DETECTION;
+					break;
+
+				case NXT_SENSOR_1:
+				case NXT_SENSOR_2:
+				case NXT_SENSOR_3:
+				case NXT_SENSOR_4:
+					resources |= Brick.BLUETOOTH_LEGO_NXT;
+					break;
+
+				case PHIRO_FRONT_LEFT:
+				case PHIRO_FRONT_RIGHT:
+				case PHIRO_SIDE_LEFT:
+				case PHIRO_SIDE_RIGHT:
+				case PHIRO_BOTTOM_LEFT:
+				case PHIRO_BOTTOM_RIGHT:
+					resources |= Brick.BLUETOOTH_PHIRO;
 					break;
 				default:
-
 			}
 		}
-		return ressources;
+		return resources;
 	}
-
 }

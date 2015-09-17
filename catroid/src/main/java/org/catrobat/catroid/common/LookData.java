@@ -1,6 +1,6 @@
 /*
  * Catroid: An on-device visual programming system for Android devices
- * Copyright (C) 2010-2014 The Catrobat Team
+ * Copyright (C) 2010-2015 The Catrobat Team
  * (<http://developer.catrobat.org/credits>)
  *
  * This program is free software: you can redistribute it and/or modify
@@ -30,6 +30,7 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.badlogic.gdx.utils.GdxRuntimeException;
 import com.thoughtworks.xstream.annotations.XStreamAsAttribute;
 
 import org.catrobat.catroid.ProjectManager;
@@ -90,7 +91,14 @@ public class LookData implements Serializable, Cloneable {
 
 	public Pixmap getPixmap() {
 		if (pixmap == null) {
-			pixmap = new Pixmap(Gdx.files.absolute(getAbsolutePath()));
+			try {
+				pixmap = new Pixmap(Gdx.files.absolute(getAbsolutePath()));
+			} catch (GdxRuntimeException gdxRuntimeException) {
+				Log.e(TAG, "gdx.files throws GdxRuntimeException");
+				if (gdxRuntimeException.getMessage().startsWith("Couldn't load file:")) {
+					pixmap = new Pixmap(1, 1, Pixmap.Format.Alpha);
+				}
+			}
 		}
 		return pixmap;
 	}
@@ -104,7 +112,6 @@ public class LookData implements Serializable, Cloneable {
 			originalPixmap = new Pixmap(Gdx.files.absolute(getAbsolutePath()));
 		}
 		return originalPixmap;
-
 	}
 
 	public LookData() {

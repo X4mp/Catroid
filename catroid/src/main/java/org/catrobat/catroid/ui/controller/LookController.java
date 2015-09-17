@@ -1,6 +1,6 @@
 /*
  * Catroid: An on-device visual programming system for Android devices
- * Copyright (C) 2010-2014 The Catrobat Team
+ * Copyright (C) 2010-2015 The Catrobat Team
  * (<http://developer.catrobat.org/credits>)
  *
  * This program is free software: you can redistribute it and/or modify
@@ -69,6 +69,7 @@ public final class LookController {
 	public static final int REQUEST_SELECT_OR_DRAW_IMAGE = 0;
 	public static final int REQUEST_POCKET_PAINT_EDIT_IMAGE = 1;
 	public static final int REQUEST_TAKE_PICTURE = 2;
+	public static final int REQUEST_MEDIA_LIBRARY = 3;
 	public static final int ID_LOADER_MEDIA_IMAGE = 1;
 	public static final String BUNDLE_ARGUMENTS_SELECTED_LOOK = "selected_look";
 	public static final String BUNDLE_ARGUMENTS_URI_IS_SET = "uri_is_set";
@@ -275,8 +276,7 @@ public final class LookController {
 			updateLookAdapter(imageName, imageFileName, lookDataList, fragment);
 		} catch (IOException e) {
 			Utils.showErrorDialog(activity, R.string.error_load_image);
-		}
-		catch (NullPointerException e) {
+		} catch (NullPointerException e) {
 			Log.e("NullPointerException", "probably originalImagePath null; message: " + e.getMessage());
 			Utils.showErrorDialog(activity, R.string.error_load_image);
 		}
@@ -292,6 +292,18 @@ public final class LookController {
 		Bundle bundle = intent.getExtras();
 		if (bundle != null) {
 			originalImagePath = bundle.getString(Constants.EXTRA_PICTURE_PATH_POCKET_PAINT);
+		}
+
+		Uri imageUri = intent.getData();
+		if (imageUri != null) {
+
+			Cursor cursor = activity.getContentResolver().query(imageUri, new String[] { android.provider.MediaStore.Images.ImageColumns.DATA }, null, null, null);
+
+			if (cursor != null) {
+				cursor.moveToFirst();
+				originalImagePath = cursor.getString(0);
+				cursor.close();
+			}
 		}
 
 		if (originalImagePath == null || originalImagePath.equals("")) {
@@ -339,7 +351,6 @@ public final class LookController {
 				Log.e(TAG, Log.getStackTraceString(ioException));
 			}
 		}
-
 	}
 
 	public void loadPictureFromCameraIntoCatroid(Uri lookFromCameraUri, Activity activity,
@@ -359,6 +370,15 @@ public final class LookController {
 		}
 	}
 
+	public void loadPictureFromLibraryIntoCatroid(String filePath, Activity activity,
+			ArrayList<LookData> lookData, LookFragment fragment) {
+		File mediaImage = null;
+		mediaImage = new File(filePath);
+		copyImageToCatroid(mediaImage.toString(), activity, lookData, fragment);
+		File pictureOnSdCard = new File(mediaImage.getPath());
+		pictureOnSdCard.delete();
+	}
+
 	public boolean checkIfPocketPaintIsInstalled(Intent intent, final Activity activity) {
 		// Confirm if Pocket Paint is installed else start dialog --------------------------
 
@@ -376,7 +396,8 @@ public final class LookController {
 									.parse(Constants.POCKET_PAINT_DOWNLOAD_LINK));
 							activity.startActivity(downloadPocketPaintIntent);
 						}
-					}).setNegativeButton(R.string.no, new DialogInterface.OnClickListener() {
+					})
+					.setNegativeButton(R.string.no, new DialogInterface.OnClickListener() {
 						@Override
 						public void onClick(DialogInterface dialog, int id) {
 							dialog.cancel();
@@ -425,14 +446,13 @@ public final class LookController {
 		activity.sendBroadcast(new Intent(ScriptActivity.ACTION_BRICK_LIST_CHANGED));
 	}
 
-	public void switchToScriptFragment(LookFragment fragment) {
-		ScriptActivity scriptActivity = (ScriptActivity) fragment.getActivity();
+	public void switchToScriptFragment(LookFragment fragment, ScriptActivity scriptActivity) {
 		scriptActivity.setCurrentFragment(ScriptActivity.FRAGMENT_SCRIPTS);
 
 		FragmentTransaction fragmentTransaction = scriptActivity.getSupportFragmentManager().beginTransaction();
 		fragmentTransaction.hide(fragment);
 		fragmentTransaction.show(scriptActivity.getSupportFragmentManager().findFragmentByTag(ScriptFragment.TAG));
-		fragmentTransaction.commit();
+		fragmentTransaction.commitAllowingStateLoss();
 
 		scriptActivity.setIsLookFragmentFromSetLookBrickNewFalse();
 		scriptActivity.setIsLookFragmentHandleAddButtonHandled(false);

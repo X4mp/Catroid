@@ -1,6 +1,6 @@
 /*
  * Catroid: An on-device visual programming system for Android devices
- * Copyright (C) 2010-2014 The Catrobat Team
+ * Copyright (C) 2010-2015 The Catrobat Team
  * (<http://developer.catrobat.org/credits>)
  *
  * This program is free software: you can redistribute it and/or modify
@@ -62,6 +62,10 @@ public final class UtilFile {
 		}
 
 		File[] contents = fileOrDirectory.listFiles();
+		if (contents == null) {
+			return 0;
+		}
+
 		long size = 0;
 		for (File file : contents) {
 			size += file.isDirectory() ? getSizeOfFileOrDirectoryInByte(file) : file.length();
@@ -91,31 +95,49 @@ public final class UtilFile {
 		 * log(a) / log(b) == logarithm of a to the base of b
 		 */
 		int exponent = (int) (Math.log(bytes) / Math.log(unit));
-		char prefix = ("KMGTPE").charAt(exponent - 1);
+		char prefix = "KMGTPE".charAt(exponent - 1);
 
 		return String.format(Locale.getDefault(), "%.1f %sB", bytes / Math.pow(unit, exponent), prefix);
 	}
 
-	public static boolean clearDirectory(File path) {
-		if (path.exists()) {
-			File[] filesInDirectory = path.listFiles();
-			if (filesInDirectory == null) {
+	public static boolean deleteDirectory(File fileOrDirectory) {
+		return deleteDirectory(fileOrDirectory, 0);
+	}
+
+	private static boolean deleteDirectory(File fileOrDirectory, int space) {
+		if (fileOrDirectory == null) {
+			return false;
+		}
+
+		StringBuilder sb = new StringBuilder();
+		for (int i = 0; i < space; i++) {
+			sb.append('-');
+		}
+
+		boolean success = true;
+		if (fileOrDirectory.exists() && fileOrDirectory.isDirectory()) {
+			// Please note: especially with MyProjectsActivityTest.testAddNewProjectMixedCase(), it happens that listFiles
+			// returns null (although fileOrDirectory exists and is a directory). This should definitely not happen
+			// and there is probably an I/O Error from the system. So we just check this manually and abort if so.
+			File[] files = fileOrDirectory.listFiles();
+			if (files == null) {
 				return false;
 			}
-			for (File file : filesInDirectory) {
-				if (file.isDirectory()) {
-					deleteDirectory(file);
-				} else {
-					file.delete();
+
+			for (File child : files) {
+				success = deleteDirectory(child, space + 1);
+				if (!success) {
+					return false;
 				}
 			}
 		}
-		return true;
-	}
 
-	public static boolean deleteDirectory(File path) {
-		clearDirectory(path);
-		return (path.delete());
+		Log.v(TAG, sb.toString() + "delete: " + fileOrDirectory.getName());
+
+		//http://stackoverflow.com/questions/11539657/open-failed-ebusy-device-or-resource-busy
+		final File renameBeforeDelete = new File(fileOrDirectory.getAbsolutePath() + System.currentTimeMillis());
+		fileOrDirectory.renameTo(renameBeforeDelete);
+		return renameBeforeDelete.delete();
 	}
 
 	public static File saveFileToProject(String project, String name, int fileID, Context context, FileType type) {
@@ -164,7 +186,7 @@ public final class UtilFile {
 
 	public static void createStandardProjectIfRootDirectoryIsEmpty(Context context) {
 		File rootDirectory = new File(Constants.DEFAULT_ROOT);
-		if (rootDirectory == null || rootDirectory.listFiles() == null || rootDirectory.listFiles().length == 0) {
+		if (rootDirectory == null || rootDirectory.listFiles() == null || getProjectNames(rootDirectory).size() == 0) {
 			ProjectManager.getInstance().initializeDefaultProject(context);
 		}
 	}

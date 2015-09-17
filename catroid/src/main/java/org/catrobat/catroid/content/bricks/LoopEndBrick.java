@@ -1,6 +1,6 @@
 /*
  * Catroid: An on-device visual programming system for Android devices
- * Copyright (C) 2010-2014 The Catrobat Team
+ * Copyright (C) 2010-2015 The Catrobat Team
  * (<http://developer.catrobat.org/credits>)
  *
  * This program is free software: you can redistribute it and/or modify
@@ -55,7 +55,6 @@ public class LoopEndBrick extends BrickBaseType implements NestingBrick, Allowed
 	}
 
 	public LoopEndBrick() {
-
 	}
 
 	@Override
@@ -122,8 +121,7 @@ public class LoopEndBrick extends BrickBaseType implements NestingBrick, Allowed
 			Drawable background = layout.getBackground();
 			background.setAlpha(alphaValue);
 
-			this.alphaValue = (alphaValue);
-
+			this.alphaValue = alphaValue;
 		}
 
 		return view;

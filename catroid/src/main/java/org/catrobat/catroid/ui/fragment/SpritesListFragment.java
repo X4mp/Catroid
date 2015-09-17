@@ -1,6 +1,6 @@
 /*
  * Catroid: An on-device visual programming system for Android devices
- * Copyright (C) 2010-2014 The Catrobat Team
+ * Copyright (C) 2010-2015 The Catrobat Team
  * (<http://developer.catrobat.org/credits>)
  *
  * This program is free software: you can redistribute it and/or modify
@@ -31,6 +31,7 @@ import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
+import android.support.v4.app.DialogFragment;
 import android.text.Spannable;
 import android.text.SpannableString;
 import android.text.style.ForegroundColorSpan;
@@ -45,7 +46,6 @@ import android.view.ViewGroup;
 import android.widget.AdapterView.AdapterContextMenuInfo;
 import android.widget.CheckBox;
 import android.widget.ListView;
-import android.widget.Toast;
 
 import com.actionbarsherlock.app.SherlockListFragment;
 import com.actionbarsherlock.view.ActionMode;
@@ -57,27 +57,33 @@ import org.catrobat.catroid.R;
 import org.catrobat.catroid.common.Constants;
 import org.catrobat.catroid.common.LookData;
 import org.catrobat.catroid.common.SoundInfo;
+import org.catrobat.catroid.content.Project;
 import org.catrobat.catroid.content.Sprite;
-import org.catrobat.catroid.formulaeditor.UserVariablesContainer;
+import org.catrobat.catroid.content.bricks.Brick;
+import org.catrobat.catroid.formulaeditor.DataContainer;
 import org.catrobat.catroid.io.LoadProjectTask;
 import org.catrobat.catroid.io.LoadProjectTask.OnLoadProjectCompleteListener;
 import org.catrobat.catroid.io.StorageHandler;
 import org.catrobat.catroid.ui.BottomBar;
 import org.catrobat.catroid.ui.ProgramMenuActivity;
 import org.catrobat.catroid.ui.ScriptActivity;
+import org.catrobat.catroid.ui.SettingsActivity;
 import org.catrobat.catroid.ui.adapter.SpriteAdapter;
 import org.catrobat.catroid.ui.adapter.SpriteAdapter.OnSpriteEditListener;
 import org.catrobat.catroid.ui.dialogs.CustomAlertDialogBuilder;
+import org.catrobat.catroid.ui.dialogs.LegoNXTSensorConfigInfoDialog;
 import org.catrobat.catroid.ui.dialogs.RenameSpriteDialog;
 import org.catrobat.catroid.utils.Utils;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.Set;
 
 public class SpritesListFragment extends SherlockListFragment implements OnSpriteEditListener,
 		OnLoadProjectCompleteListener {
 
+	public static final String TAG = SpritesListFragment.class.getSimpleName();
 	private static final String BUNDLE_ARGUMENTS_SPRITE_TO_EDIT = "sprite_to_edit";
 	private static final String SHARED_PREFERENCE_NAME = "showDetailsProjects";
 
@@ -88,6 +94,7 @@ public class SpritesListFragment extends SherlockListFragment implements OnSprit
 	private SpriteAdapter spriteAdapter;
 	private ArrayList<Sprite> spriteList;
 	private Sprite spriteToEdit;
+	private int spritePosition;
 
 	private SpriteRenamedReceiver spriteRenamedReceiver;
 	private SpritesListChangedReceiver spritesListChangedReceiver;
@@ -102,6 +109,8 @@ public class SpritesListFragment extends SherlockListFragment implements OnSprit
 
 	private LoadProjectTask loadProjectTask;
 	public boolean isLoading = false;
+
+	private boolean fragmentStartedFirstTime = true;
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -146,7 +155,7 @@ public class SpritesListFragment extends SherlockListFragment implements OnSprit
 		ProjectManager projectManager = ProjectManager.getInstance();
 		if (programName != null
 				&& ((projectManager.getCurrentProject() != null && !projectManager.getCurrentProject().getName()
-						.equals(programName)) || projectManager.getCurrentProject() == null)) {
+				.equals(programName)) || projectManager.getCurrentProject() == null)) {
 
 			getActivity().findViewById(R.id.progress_circle).setVisibility(View.VISIBLE);
 			getActivity().findViewById(R.id.progress_circle).bringToFront();
@@ -159,7 +168,12 @@ public class SpritesListFragment extends SherlockListFragment implements OnSprit
 			loadProjectTask = new LoadProjectTask(getActivity(), programName, true, true);
 			loadProjectTask.setOnLoadProjectCompleteListener(this);
 			loadProjectTask.execute();
+		} else if (projectManager.getCurrentProject() != null && projectManager.getCurrentProject().getName()
+				.equals(programName) && fragmentStartedFirstTime) {
+			showInfoFragmentIfNeeded();
 		}
+
+		fragmentStartedFirstTime = false;
 	}
 
 	@Override
@@ -214,7 +228,7 @@ public class SpritesListFragment extends SherlockListFragment implements OnSprit
 
 		ProjectManager projectManager = ProjectManager.getInstance();
 		if (projectManager.getCurrentProject() != null) {
-			projectManager.saveProject();
+			projectManager.saveProject(getActivity().getApplicationContext());
 		}
 
 		if (spriteRenamedReceiver != null) {
@@ -244,6 +258,7 @@ public class SpritesListFragment extends SherlockListFragment implements OnSprit
 		AdapterContextMenuInfo info = (AdapterContextMenuInfo) menuInfo;
 
 		spriteToEdit = spriteAdapter.getItem(info.position);
+		spritePosition = info.position;
 		spriteAdapter.addCheckedSprite(info.position);
 
 		if (ProjectManager.getInstance().getCurrentProject().getSpriteList().indexOf(spriteToEdit) == 0) {
@@ -258,7 +273,16 @@ public class SpritesListFragment extends SherlockListFragment implements OnSprit
 			menu.findItem(R.id.context_menu_backpack).setVisible(false);
 			menu.findItem(R.id.context_menu_unpacking).setVisible(false);
 		}
+		menu.findItem(R.id.context_menu_move_up).setVisible(true);
+		menu.findItem(R.id.context_menu_move_down).setVisible(true);
+		menu.findItem(R.id.context_menu_move_to_top).setVisible(true);
+		menu.findItem(R.id.context_menu_move_to_bottom).setVisible(true);
 
+		menu.findItem(R.id.context_menu_move_down).setEnabled(!(spritePosition == spriteList.size() - 1));
+		menu.findItem(R.id.context_menu_move_to_bottom).setEnabled(!(spritePosition == spriteList.size() - 1));
+
+		menu.findItem(R.id.context_menu_move_up).setEnabled(!(spritePosition == 1));
+		menu.findItem(R.id.context_menu_move_to_top).setEnabled(!(spritePosition == 1));
 	}
 
 	@Override
@@ -285,6 +309,19 @@ public class SpritesListFragment extends SherlockListFragment implements OnSprit
 				showConfirmDeleteDialog();
 				break;
 
+			case R.id.context_menu_move_down:
+				moveSpriteDown();
+				break;
+
+			case R.id.context_menu_move_up:
+				moveSpriteUp();
+				break;
+			case R.id.context_menu_move_to_bottom:
+				moveSpriteToBottom();
+				break;
+			case R.id.context_menu_move_to_top:
+				moveSpriteToTop();
+				break;
 		}
 		return super.onContextItemSelected(item);
 	}
@@ -349,6 +386,30 @@ public class SpritesListFragment extends SherlockListFragment implements OnSprit
 		}
 	}
 
+	private void moveSpriteDown() {
+		Collections.swap(spriteList, spritePosition + 1, spritePosition);
+		spriteAdapter.notifyDataSetChanged();
+	}
+
+	private void moveSpriteUp() {
+		Collections.swap(spriteList, spritePosition - 1, spritePosition);
+		spriteAdapter.notifyDataSetChanged();
+	}
+
+	private void moveSpriteToBottom() {
+		for (int i = spritePosition; i < spriteList.size() - 1; i++) {
+			Collections.swap(spriteList, i, i + 1);
+		}
+		spriteAdapter.notifyDataSetChanged();
+	}
+
+	private void moveSpriteToTop() {
+		for (int i = spritePosition; i > 1; i--) {
+			Collections.swap(spriteList, i, i - 1);
+		}
+		spriteAdapter.notifyDataSetChanged();
+	}
+
 	public void startCopyActionMode() {
 		if (actionMode == null) {
 			actionMode = getSherlockActivity().startActionMode(copyModeCallBack);
@@ -373,12 +434,6 @@ public class SpritesListFragment extends SherlockListFragment implements OnSprit
 		projectManager.setCurrentSprite(copiedSprite);
 
 		getActivity().sendBroadcast(new Intent(ScriptActivity.ACTION_SPRITES_LIST_CHANGED));
-
-		Toast.makeText(
-				getActivity(),
-				this.getString(R.string.copy_sprite_prefix).concat(" ").concat(spriteToEdit.getName()).concat(" ")
-						.concat(this.getString(R.string.copy_sprite_finished)), Toast.LENGTH_LONG).show();
-
 		Log.d("Sprite copied", copiedSprite.toString());
 	}
 
@@ -434,10 +489,11 @@ public class SpritesListFragment extends SherlockListFragment implements OnSprit
 
 	public void deleteSprite() {
 		ProjectManager projectManager = ProjectManager.getInstance();
-		UserVariablesContainer userVariablesContainer = projectManager.getCurrentProject().getUserVariables();
+		DataContainer dataContainer = projectManager.getCurrentProject().getDataContainer();
 
 		deleteSpriteFiles();
-		userVariablesContainer.cleanVariableListForSprite(spriteToEdit);
+		dataContainer.cleanVariableListForSprite(spriteToEdit);
+		dataContainer.cleanUserListForSprite(spriteToEdit);
 
 		if (projectManager.getCurrentSprite() != null && projectManager.getCurrentSprite().equals(spriteToEdit)) {
 			projectManager.setCurrentSprite(null);
@@ -498,7 +554,6 @@ public class SpritesListFragment extends SherlockListFragment implements OnSprit
 				spriteAdapter.notifyDataSetChanged();
 				onSpriteChecked();
 			}
-
 		});
 	}
 
@@ -677,11 +732,26 @@ public class SpritesListFragment extends SherlockListFragment implements OnSprit
 		getActivity().findViewById(R.id.progress_circle).setVisibility(View.GONE);
 		getActivity().findViewById(R.id.fragment_sprites_list).setVisibility(View.VISIBLE);
 		getActivity().findViewById(R.id.bottom_bar).setVisibility(View.VISIBLE);
+
+		showInfoFragmentIfNeeded();
+	}
+
+	private void showInfoFragmentIfNeeded() {
+		if (needToShowLegoNXTInfoDialog()) {
+			DialogFragment dialog = new LegoNXTSensorConfigInfoDialog();
+			dialog.show(this.getActivity().getSupportFragmentManager(), LegoNXTSensorConfigInfoDialog.DIALOG_FRAGMENT_TAG);
+		}
+	}
+
+	private boolean needToShowLegoNXTInfoDialog() {
+		boolean isLegoNXTInfoDialogDisabled = SettingsActivity.getShowLegoMindstormsSensorInfoDialog(this.getActivity().getApplicationContext());
+		Project project = ProjectManager.getInstance().getCurrentProject();
+
+		return !isLegoNXTInfoDialogDisabled && (project.getRequiredResources() & Brick.BLUETOOTH_LEGO_NXT) != 0;
 	}
 
 	@Override
 	public void onLoadProjectFailure() {
 		getActivity().onBackPressed();
 	}
-
 }

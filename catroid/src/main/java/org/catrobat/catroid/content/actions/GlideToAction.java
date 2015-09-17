@@ -1,6 +1,6 @@
 /*
  * Catroid: An on-device visual programming system for Android devices
- * Copyright (C) 2010-2014 The Catrobat Team
+ * Copyright (C) 2010-2015 The Catrobat Team
  * (<http://developer.catrobat.org/credits>)
  *
  * This program is free software: you can redistribute it and/or modify
@@ -53,24 +53,24 @@ public class GlideToAction extends TemporalAction {
 
 		try {
 			durationInterpretation = duration == null ? Float.valueOf(0f) : duration.interpretFloat(sprite);
-        } catch (InterpretationException interpretationException) {
-            durationInterpretation = 0f;
-            Log.d(getClass().getSimpleName(),"Formula interpretation for this specific Brick failed." , interpretationException);
-        }
+		} catch (InterpretationException interpretationException) {
+			durationInterpretation = 0f;
+			Log.d(getClass().getSimpleName(), "Formula interpretation for this specific Brick failed.", interpretationException);
+		}
 
 		try {
 			endXInterpretation = endX == null ? Float.valueOf(0f) : endX.interpretFloat(sprite);
-        } catch (InterpretationException interpretationException) {
-            durationInterpretation = 0f;
-            Log.d(getClass().getSimpleName(),"Formula interpretation for this specific Brick failed." , interpretationException);
-        }
+		} catch (InterpretationException interpretationException) {
+			durationInterpretation = 0f;
+			Log.d(getClass().getSimpleName(), "Formula interpretation for this specific Brick failed.", interpretationException);
+		}
 
 		try {
 			endYInterpretation = endY == null ? Float.valueOf(0f) : endY.interpretFloat(sprite);
-        } catch (InterpretationException interpretationException) {
-            durationInterpretation = 0f;
-            Log.d(getClass().getSimpleName(),"Formula interpretation for this specific Brick failed." , interpretationException);
-        }
+		} catch (InterpretationException interpretationException) {
+			durationInterpretation = 0f;
+			Log.d(getClass().getSimpleName(), "Formula interpretation for this specific Brick failed.", interpretationException);
+		}
 
 		if (!restart) {
 			if (duration != null) {

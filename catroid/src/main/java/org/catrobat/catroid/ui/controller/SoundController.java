@@ -1,6 +1,6 @@
 /*
  * Catroid: An on-device visual programming system for Android devices
- * Copyright (C) 2010-2014 The Catrobat Team
+ * Copyright (C) 2010-2015 The Catrobat Team
  * (<http://developer.catrobat.org/credits>)
  *
  * This program is free software: you can redistribute it and/or modify
@@ -71,10 +71,12 @@ import java.util.Iterator;
 import java.util.SortedSet;
 
 public final class SoundController {
+	public static final int REQUEST_SELECT_OR_RECORD_SOUND = 0;
 	public static final String BUNDLE_ARGUMENTS_SELECTED_SOUND = "selected_sound";
 	public static final String SHARED_PREFERENCE_NAME = "showDetailsSounds";
 	public static final int ID_LOADER_MEDIA_IMAGE = 1;
 	public static final int REQUEST_SELECT_MUSIC = 0;
+	public static final int REQUEST_MEDIA_LIBRARY = 2;
 
 	private static final SoundController INSTANCE = new SoundController();
 	private static final String TAG = SoundController.class.getSimpleName();
@@ -92,9 +94,9 @@ public final class SoundController {
 	 * other file-based ContentProviders.
 	 * <p/>
 	 * <p/>
-	 * solution according to: http://stackoverflow.com/questions/19834842/android-gallery-on-kitkat-returns-different-uri-for-intent-action-get-content
-	 *
-	 * @author paulburke
+	 * solution according to:
+	 * http://stackoverflow.com/questions/19834842/android-gallery-on-kitkat-returns-different-uri
+	 * -for-intent-action-get-content
 	 */
 	@TargetApi(19)
 	private static String getPathForVersionAboveEqualsVersion19(final Context context, final Uri uri) {
@@ -114,18 +116,16 @@ public final class SoundController {
 				}
 
 				// TODO handle non-primary volumes
-			}
-			// DownloadsProvider
-			else if (isDownloadsDocument(uri)) {
+			} else if (isDownloadsDocument(uri)) {
+				// DownloadsProvider
 
 				final String id = DocumentsContract.getDocumentId(uri);
-				final Uri contentUri = ContentUris.withAppendedId(
-						Uri.parse("content://downloads/public_downloads"), Long.valueOf(id));
+				final Uri contentUri = ContentUris.withAppendedId(Uri.parse("content://downloads/public_downloads"),
+						Long.valueOf(id));
 
 				return getDataColumn(context, contentUri, null, null);
-			}
-			// MediaProvider
-			else if (isMediaDocument(uri)) {
+			} else if (isMediaDocument(uri)) {
+				// MediaProvider
 				final String docId = DocumentsContract.getDocumentId(uri);
 				final String[] split = docId.split(":");
 				final String type = split[0];
@@ -140,42 +140,34 @@ public final class SoundController {
 				}
 
 				final String selection = "_id=?";
-				final String[] selectionArgs = new String[]{
-						split[1]
-				};
+				final String[] selectionArgs = new String[] { split[1] };
 
 				return getDataColumn(context, contentUri, selection, selectionArgs);
 			}
-		}
-		// MediaStore (and general)
-		else if ("content".equalsIgnoreCase(uri.getScheme())) {
+		} else if ("content".equalsIgnoreCase(uri.getScheme())) {
+			// MediaStore (and general)
 
 			// Return the remote address
 			if (isGooglePhotosUri(uri)) {
 				return uri.getLastPathSegment();
 			}
 			return getDataColumn(context, uri, null, null);
-		}
-		// File
-		else if ("file".equalsIgnoreCase(uri.getScheme())) {
+		} else if ("file".equalsIgnoreCase(uri.getScheme())) {
+			// File
 			return uri.getPath();
 		}
 
 		return null;
 	}
 
-	private static String getDataColumn(Context context, Uri uri, String selection,
-										String[] selectionArgs) {
+	private static String getDataColumn(Context context, Uri uri, String selection, String[] selectionArgs) {
 
 		Cursor cursor = null;
 		final String column = "_data";
-		final String[] projection = {
-				column
-		};
+		final String[] projection = { column };
 
 		try {
-			cursor = context.getContentResolver().query(uri, projection, selection, selectionArgs,
-					null);
+			cursor = context.getContentResolver().query(uri, projection, selection, selectionArgs, null);
 			if (cursor != null && cursor.moveToFirst()) {
 				final int index = cursor.getColumnIndexOrThrow(column);
 				return cursor.getString(index);
@@ -205,7 +197,7 @@ public final class SoundController {
 	}
 
 	public void updateSoundLogic(Context context, final int position, final SoundViewHolder holder,
-								 final SoundBaseAdapter soundAdapter) {
+			final SoundBaseAdapter soundAdapter) {
 		final SoundInfo soundInfo = soundAdapter.getSoundInfoItems().get(position);
 
 		if (soundInfo == null) {
@@ -221,8 +213,8 @@ public final class SoundController {
 	}
 
 	private void setClickListener(final SoundBaseAdapter soundAdapter, final SoundViewHolder holder,
-								  final SoundInfo soundInfo) {
-		OnClickListener listItemOnClickListener = (new OnClickListener() {
+			final SoundInfo soundInfo) {
+		OnClickListener listItemOnClickListener = new OnClickListener() {
 
 			@Override
 			public void onClick(View view) {
@@ -230,7 +222,7 @@ public final class SoundController {
 					holder.checkbox.setChecked(!holder.checkbox.isChecked());
 				}
 			}
-		});
+		};
 
 		if (soundAdapter.getSelectMode() != ListView.CHOICE_MODE_NONE) {
 			holder.playAndStopButton.setOnClickListener(listItemOnClickListener);
@@ -270,7 +262,7 @@ public final class SoundController {
 	}
 
 	private void handleSoundInfo(SoundViewHolder holder, SoundInfo soundInfo, SoundBaseAdapter soundAdapter,
-								 int position, Context context) {
+			int position, Context context) {
 		try {
 			MediaPlayer tempPlayer = new MediaPlayer();
 			tempPlayer.setDataSource(soundInfo.getAbsolutePath());
@@ -375,12 +367,12 @@ public final class SoundController {
 	}
 
 	public void backPackSound(SoundInfo selectedSoundInfo, BackPackSoundFragment backPackSoundActivity,
-							  ArrayList<SoundInfo> soundInfoList, SoundBaseAdapter adapter) {
+			ArrayList<SoundInfo> soundInfoList, SoundBaseAdapter adapter) {
 		copySoundBackPack(selectedSoundInfo, soundInfoList, adapter);
 	}
 
 	private void copySoundBackPack(SoundInfo selectedSoundInfo, ArrayList<SoundInfo> soundInfoList,
-								   SoundBaseAdapter adapter) {
+			SoundBaseAdapter adapter) {
 		try {
 			StorageHandler.getInstance().copySoundFileBackPack(selectedSoundInfo);
 		} catch (IOException ioException) {
@@ -419,7 +411,7 @@ public final class SoundController {
 	}
 
 	public void deleteCheckedSounds(Activity activity, SoundBaseAdapter adapter, ArrayList<SoundInfo> soundInfoList,
-									MediaPlayer mediaPlayer) {
+			MediaPlayer mediaPlayer) {
 		SortedSet<Integer> checkedSounds = adapter.getCheckedItems();
 		Iterator<Integer> iterator = checkedSounds.iterator();
 		SoundController.getInstance().stopSoundAndUpdateList(mediaPlayer, soundInfoList, adapter);
@@ -432,7 +424,7 @@ public final class SoundController {
 	}
 
 	public SoundInfo updateBackPackActivity(String title, String fileName, ArrayList<SoundInfo> soundInfoList,
-											SoundBaseAdapter adapter) {
+			SoundBaseAdapter adapter) {
 		title = Utils.getUniqueSoundName(title);
 
 		SoundInfo newSoundInfo = new SoundInfo();
@@ -445,7 +437,7 @@ public final class SoundController {
 	}
 
 	public SoundInfo updateSoundAdapter(String title, String fileName, ArrayList<SoundInfo> soundInfoList,
-										SoundBaseAdapter adapter) {
+			SoundBaseAdapter adapter) {
 
 		title = Utils.getUniqueSoundName(title);
 
@@ -473,7 +465,7 @@ public final class SoundController {
 	}
 
 	public void handlePlaySoundButton(View view, ArrayList<SoundInfo> soundInfoList, MediaPlayer mediaPlayer,
-									  final SoundBaseAdapter adapter) {
+			final SoundBaseAdapter adapter) {
 		final int position = (Integer) view.getTag();
 		final SoundInfo soundInfo = soundInfoList.get(position);
 
@@ -493,7 +485,7 @@ public final class SoundController {
 	}
 
 	public void stopSoundAndUpdateList(MediaPlayer mediaPlayer, ArrayList<SoundInfo> soundInfoList,
-									   SoundBaseAdapter adapter) {
+			SoundBaseAdapter adapter) {
 		if (!isSoundPlaying(mediaPlayer)) {
 			return;
 		}
@@ -522,7 +514,7 @@ public final class SoundController {
 		if (arguments != null) {
 			audioUri = (Uri) arguments.get(BUNDLE_ARGUMENTS_SELECTED_SOUND);
 		}
-		String[] projection = {MediaStore.Audio.Media.DATA};
+		String[] projection = { MediaStore.Audio.Media.DATA };
 		return new CursorLoader(activity, audioUri, projection, null, null, null);
 	}
 
@@ -548,7 +540,15 @@ public final class SoundController {
 		} else {
 			return audioPath;
 		}
+	}
 
+	public void addSoundFromMediaLibrary(String filePath, Activity activity,
+			ArrayList<SoundInfo> soundData, SoundFragment fragment) {
+		File mediaImage = null;
+		mediaImage = new File(filePath);
+		copySoundToCatroid(mediaImage.toString(), activity, soundData, fragment);
+		File soundOnSdCard = new File(mediaImage.getPath());
+		soundOnSdCard.delete();
 	}
 
 	public void handleAddButtonFromNew(SoundFragment soundFragment) {
@@ -573,4 +573,46 @@ public final class SoundController {
 		scriptActivity.setIsSoundFragmentHandleAddButtonHandled(false);
 	}
 
+	private void copySoundToCatroid(String originalSoundPath, Activity activity, ArrayList<SoundInfo> soundList,
+			SoundFragment fragment) {
+		try {
+			File oldFile = new File(originalSoundPath);
+
+			if (originalSoundPath.equals("")) {
+				throw new IOException();
+			}
+
+			File soundFile = StorageHandler.getInstance().copySoundFile(originalSoundPath);
+
+			String soundName;
+			int extensionDotIndex = oldFile.getName().lastIndexOf('.');
+			if (extensionDotIndex > 0) {
+				soundName = oldFile.getName().substring(0, extensionDotIndex);
+			} else {
+				soundName = oldFile.getName();
+			}
+
+			String soundFileName = soundFile.getName();
+
+			updateSoundAdapter(soundName, soundFileName, soundList, fragment);
+		} catch (IOException e) {
+			Utils.showErrorDialog(activity, R.string.error_load_sound);
+		} catch (NullPointerException e) {
+			Log.e("NullPointerException", "probably originalSoundPath null; message: " + e.getMessage());
+			Utils.showErrorDialog(activity, R.string.error_load_sound);
+		}
+		activity.sendBroadcast(new Intent(ScriptActivity.ACTION_BRICK_LIST_CHANGED));
+	}
+
+	private void updateSoundAdapter(String name, String fileName, ArrayList<SoundInfo> soundList, SoundFragment
+			fragment) {
+		name = Utils.getUniqueSoundName(name);
+
+		SoundInfo soundInfo = new SoundInfo();
+		soundInfo.setSoundFileName(fileName);
+		soundInfo.setTitle(name);
+		soundList.add(soundInfo);
+
+		fragment.updateSoundAdapter(soundInfo);
+	}
 }

@@ -1,6 +1,6 @@
 /*
  * Catroid: An on-device visual programming system for Android devices
- * Copyright (C) 2010-2014 The Catrobat Team
+ * Copyright (C) 2010-2015 The Catrobat Team
  * (<http://developer.catrobat.org/credits>)
  *
  * This program is free software: you can redistribute it and/or modify
@@ -46,13 +46,10 @@ public final class ImageEditing {
 
 	/**
 	 * Scales the bitmap to the specified size.
-	 * 
-	 * @param bitmap
-	 *            the bitmap to resize
-	 * @param xSize
-	 *            desired x size
-	 * @param ySize
-	 *            desired y size
+	 *
+	 * @param bitmap the bitmap to resize
+	 * @param xSize  desired x size
+	 * @param ySize  desired y size
 	 * @return a new, scaled bitmap
 	 */
 	private static Bitmap scaleBitmap(Bitmap bitmap, int xSize, int ySize) {
@@ -85,8 +82,6 @@ public final class ImageEditing {
 		double sampleSizeHeight = ((double) originalHeight) / (double) outputRectangleHeight;
 		double sampleSizeMinimum = Math.min(sampleSizeWidth, sampleSizeHeight);
 		double sampleSizeMaximum = Math.max(sampleSizeWidth, sampleSizeHeight);
-
-
 
 		if (resizeType == ResizeType.STRETCH_TO_RECTANGLE) {
 			newWidth = outputRectangleWidth;

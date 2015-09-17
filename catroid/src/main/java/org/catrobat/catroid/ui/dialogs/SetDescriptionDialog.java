@@ -1,6 +1,6 @@
 /*
  * Catroid: An on-device visual programming system for Android devices
- * Copyright (C) 2010-2014 The Catrobat Team
+ * Copyright (C) 2010-2015 The Catrobat Team
  * (<http://developer.catrobat.org/credits>)
  *
  * This program is free software: you can redistribute it and/or modify
@@ -22,17 +22,20 @@
  */
 package org.catrobat.catroid.ui.dialogs;
 
+import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.util.Log;
 
 import org.catrobat.catroid.ProjectManager;
 import org.catrobat.catroid.R;
+import org.catrobat.catroid.common.Constants;
 import org.catrobat.catroid.exceptions.ProjectException;
 import org.catrobat.catroid.utils.Utils;
 
 public class SetDescriptionDialog extends MultiLineTextDialog {
 
-	private static final String BUNDLE_ARGUMENTS_OLD_PROJECT_DESCRIPTION = "old_project_description";
+	private static final String BUNDLE_ARGUMENTS_OLD_PROJECT_NAME = "BUNDLE_ARGUMENTS_OLD_PROJECT_NAME";
 	public static final String DIALOG_FRAGMENT_TAG = "dialog_set_description";
 
 	private OnUpdateProjectDescriptionListener onUpdateProjectDescriptionListener;
@@ -44,7 +47,7 @@ public class SetDescriptionDialog extends MultiLineTextDialog {
 		SetDescriptionDialog dialog = new SetDescriptionDialog();
 
 		Bundle arguments = new Bundle();
-		arguments.putString(BUNDLE_ARGUMENTS_OLD_PROJECT_DESCRIPTION, projectToChangeName);
+		arguments.putString(BUNDLE_ARGUMENTS_OLD_PROJECT_NAME, projectToChangeName);
 		dialog.setArguments(arguments);
 
 		return dialog;
@@ -57,8 +60,9 @@ public class SetDescriptionDialog extends MultiLineTextDialog {
 	@Override
 	protected void initialize() {
 		projectManager = ProjectManager.getInstance();
-		projectToChangeName = getArguments().getString(BUNDLE_ARGUMENTS_OLD_PROJECT_DESCRIPTION);
-		String currentProjectName = projectManager.getCurrentProject().getName();
+		projectToChangeName = getArguments().getString(BUNDLE_ARGUMENTS_OLD_PROJECT_NAME);
+		SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getActivity());
+		String currentProjectName = sharedPreferences.getString(Constants.PREF_PROJECTNAME_KEY, null);
 
 		if (projectToChangeName.equalsIgnoreCase(currentProjectName)) {
 			input.setText(projectManager.getCurrentProject().getDescription());
@@ -118,7 +122,7 @@ public class SetDescriptionDialog extends MultiLineTextDialog {
 
 	private void setDescription(String description) {
 		projectManager.getCurrentProject().setDescription(description);
-		projectManager.saveProject();
+		projectManager.saveProject(getActivity().getApplicationContext());
 		updateProjectDescriptionListener();
 	}
 
@@ -131,6 +135,5 @@ public class SetDescriptionDialog extends MultiLineTextDialog {
 	public interface OnUpdateProjectDescriptionListener {
 
 		void onUpdateProjectDescription();
-
 	}
 }

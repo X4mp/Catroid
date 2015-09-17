@@ -1,6 +1,6 @@
 /*
  * Catroid: An on-device visual programming system for Android devices
- * Copyright (C) 2010-2014 The Catrobat Team
+ * Copyright (C) 2010-2015 The Catrobat Team
  * (<http://developer.catrobat.org/credits>)
  *
  * This program is free software: you can redistribute it and/or modify
@@ -43,7 +43,6 @@ public class IfOnEdgeBounceBrick extends BrickBaseType {
 	private static final long serialVersionUID = 1L;
 
 	public IfOnEdgeBounceBrick() {
-
 	}
 
 	@Override
@@ -86,11 +85,10 @@ public class IfOnEdgeBounceBrick extends BrickBaseType {
 			View layout = view.findViewById(R.id.brick_if_on_edge_bounce_layout);
 			Drawable background = layout.getBackground();
 			background.setAlpha(alphaValue);
-			this.alphaValue = (alphaValue);
+			this.alphaValue = alphaValue;
 
 			TextView ifBounceLabel = (TextView) view.findViewById(R.id.brick_if_on_edge_bounce_label);
 			ifBounceLabel.setTextColor(ifBounceLabel.getTextColors().withAlpha(alphaValue));
-
 		}
 
 		return view;

@@ -1,6 +1,6 @@
 /*
  * Catroid: An on-device visual programming system for Android devices
- * Copyright (C) 2010-2014 The Catrobat Team
+ * Copyright (C) 2010-2015 The Catrobat Team
  * (<http://developer.catrobat.org/credits>)
  *
  * This program is free software: you can redistribute it and/or modify
@@ -43,6 +43,8 @@ import org.catrobat.catroid.content.bricks.IfLogicElseBrick;
 import org.catrobat.catroid.content.bricks.IfLogicEndBrick;
 import org.catrobat.catroid.content.bricks.LoopBeginBrick;
 import org.catrobat.catroid.content.bricks.LoopEndBrick;
+import org.catrobat.catroid.content.bricks.PhiroIfLogicBeginBrick;
+import org.catrobat.catroid.content.bricks.UserBrick;
 import org.catrobat.catroid.exceptions.CompatibilityProjectException;
 import org.catrobat.catroid.exceptions.LoadingProjectException;
 import org.catrobat.catroid.exceptions.OutdatedVersionProjectException;
@@ -51,6 +53,7 @@ import org.catrobat.catroid.io.LoadProjectTask.OnLoadProjectCompleteListener;
 import org.catrobat.catroid.io.StorageHandler;
 import org.catrobat.catroid.transfers.CheckTokenTask;
 import org.catrobat.catroid.transfers.CheckTokenTask.OnCheckTokenCompleteListener;
+import org.catrobat.catroid.ui.SettingsActivity;
 import org.catrobat.catroid.ui.dialogs.LoginRegisterDialog;
 import org.catrobat.catroid.ui.dialogs.UploadProjectDialog;
 import org.catrobat.catroid.utils.Utils;
@@ -67,11 +70,42 @@ public final class ProjectManager implements OnLoadProjectCompleteListener, OnCh
 	private Project project;
 	private Script currentScript;
 	private Sprite currentSprite;
+	private UserBrick currentUserBrick;
 	private boolean asynchronTask = true;
+	private boolean comingFromScriptFragmentToSoundFragment;
+	private boolean comingFromScriptFragmentToLooksFragment;
+	private boolean handleCorrectAddButton;
 
 	private FileChecksumContainer fileChecksumContainer = new FileChecksumContainer();
 
 	private ProjectManager() {
+		this.comingFromScriptFragmentToSoundFragment = false;
+		this.comingFromScriptFragmentToLooksFragment = false;
+		this.handleCorrectAddButton = false;
+	}
+
+	public void setComingFromScriptFragmentToSoundFragment(boolean value) {
+		this.comingFromScriptFragmentToSoundFragment = value;
+	}
+
+	public boolean getComingFromScriptFragmentToSoundFragment() {
+		return this.comingFromScriptFragmentToSoundFragment;
+	}
+
+	public void setComingFromScriptFragmentToLooksFragment(boolean value) {
+		this.comingFromScriptFragmentToLooksFragment = value;
+	}
+
+	public boolean getComingFromScriptFragmentToLooksFragment() {
+		return this.comingFromScriptFragmentToLooksFragment;
+	}
+
+	public void setHandleCorrectAddButton(boolean value) {
+		this.handleCorrectAddButton = value;
+	}
+
+	public boolean getHandleCorrectAddButton() {
+		return this.handleCorrectAddButton;
 	}
 
 	public static ProjectManager getInstance() {
@@ -123,8 +157,13 @@ public final class ProjectManager implements OnLoadProjectCompleteListener, OnCh
 			}
 			throw new LoadingProjectException(context.getString(R.string.error_load_project));
 		} else if (project.getCatrobatLanguageVersion() > Constants.CURRENT_CATROBAT_LANGUAGE_VERSION) {
-			project = oldProject;
-			throw new OutdatedVersionProjectException(context.getString(R.string.error_outdated_pocketcode_version));
+			if (project.getCatrobatLanguageVersion() == 0.93f) {
+				// this was done because of insufficient error message in older program versions
+				project.setCatrobatLanguageVersion(0.92f);
+			} else {
+				project = oldProject;
+				throw new OutdatedVersionProjectException(context.getString(R.string.error_outdated_pocketcode_version));
+			}
 		} else {
 			if (project.getCatrobatLanguageVersion() == 0.8f) {
 				//TODO insert in every "When project starts" script list a "show" brick
@@ -139,11 +178,19 @@ public final class ProjectManager implements OnLoadProjectCompleteListener, OnCh
 				project.setScreenMode(ScreenModes.STRETCH);
 				checkNestingBrickReferences(false);
 			}
-			if (project.getCatrobatLanguageVersion() == 0.92f) {
-				project.setCatrobatLanguageVersion(0.93f);
-			}
 
-			//insert further conversions here
+			if (project.getCatrobatLanguageVersion() == 0.92f || project.getCatrobatLanguageVersion() == 0.93f) {
+				//0.93 should be left out because it available unintentional for a day
+				//raise language version here to 0.94
+				project.setCatrobatLanguageVersion(0.94f);
+			}
+			if (project.getCatrobatLanguageVersion() == 0.94f) {
+				project.setCatrobatLanguageVersion(Constants.CURRENT_CATROBAT_LANGUAGE_VERSION);
+			}
+			if (project.getCatrobatLanguageVersion() == 0.95f) {
+				project.setCatrobatLanguageVersion(Constants.CURRENT_CATROBAT_LANGUAGE_VERSION);
+			}
+//			insert further conversions here
 
 			checkNestingBrickReferences(true);
 			if (project.getCatrobatLanguageVersion() == Constants.CURRENT_CATROBAT_LANGUAGE_VERSION) {
@@ -156,6 +203,19 @@ public final class ProjectManager implements OnLoadProjectCompleteListener, OnCh
 			}
 		}
 
+		if (project != null) {
+			project.loadLegoNXTSettingsFromProject(context);
+
+			int resources = project.getRequiredResources();
+
+			if ((resources & Brick.BLUETOOTH_PHIRO) > 0) {
+				SettingsActivity.setPhiroSharedPreferenceEnabled(context, true);
+			}
+
+			if ((resources & Brick.FACE_DETECTION) > 0) {
+				SettingsActivity.setFaceDetectionSharedPreferenceEnabled(context, true);
+			}
+		}
 	}
 
 	private void localizeBackgroundSprite(Context context) {
@@ -178,10 +238,12 @@ public final class ProjectManager implements OnLoadProjectCompleteListener, OnCh
 		return StorageHandler.getInstance().loadProject(projectName) != null;
 	}
 
-	public void saveProject() {
+	public void saveProject(Context context) {
 		if (project == null) {
 			return;
 		}
+
+		project.saveLegoNXTSettingsToProject(context);
 
 		if (asynchronTask) {
 			SaveProjectAsynchronousTask saveTask = new SaveProjectAsynchronousTask();
@@ -221,22 +283,37 @@ public final class ProjectManager implements OnLoadProjectCompleteListener, OnCh
 		}
 	}
 
-	public void initializeNewProject(String projectName, Context context, boolean empty)
+	public void initializeNewProject(String projectName, Context context, boolean empty, boolean landscape)
 			throws IllegalArgumentException, IOException {
 		fileChecksumContainer = new FileChecksumContainer();
 
 		if (empty) {
-			project = StandardProjectHandler.createAndSaveEmptyProject(projectName, context);
+			project = StandardProjectHandler.createAndSaveEmptyProject(projectName, context, landscape);
 		} else {
-			project = StandardProjectHandler.createAndSaveStandardProject(projectName, context);
+			project = StandardProjectHandler.createAndSaveStandardProject(projectName, context, landscape);
 		}
 
 		currentSprite = null;
 		currentScript = null;
 	}
 
+	public void initializeNewProject(String projectName, Context context, boolean empty)
+			throws IllegalArgumentException, IOException {
+		initializeNewProject(projectName, context, empty, false);
+	}
+
 	public Project getCurrentProject() {
 		return project;
+	}
+
+	public boolean isCurrentProjectLandscape() {
+		int virtualScreenWidth = getCurrentProject().getXmlHeader().virtualScreenWidth;
+		int virtualScreenHeight = getCurrentProject().getXmlHeader().virtualScreenHeight;
+
+		if (virtualScreenWidth > virtualScreenHeight) {
+			return true;
+		}
+		return false;
 	}
 
 	public void setProject(Project project) {
@@ -246,9 +323,30 @@ public final class ProjectManager implements OnLoadProjectCompleteListener, OnCh
 		this.project = project;
 	}
 
-	public void deleteCurrentProject() {
-		StorageHandler.getInstance().deleteProject(project);
-		project = null;
+	//@Deprecated
+	public void deleteCurrentProject(Context context) throws IllegalArgumentException, IOException {
+		deleteProject(project.getName(), context);
+	}
+
+	public void deleteProject(String projectName, Context context) throws IllegalArgumentException, IOException {
+		Log.d(TAG, "deleteProject " + projectName);
+		if (StorageHandler.getInstance().projectExists(projectName)) {
+			StorageHandler.getInstance().deleteProject(projectName);
+		}
+
+		if (project != null && project.getName().equals(projectName)) {
+			Log.d(TAG, "deleteProject(): project instance set to null");
+
+			project = null;
+
+			if (context != null) {
+				SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
+				String currentProjectName = sharedPreferences.getString(Constants.PREF_PROJECTNAME_KEY, "notFound");
+				if (!currentProjectName.equals("notFound")) {
+					Utils.removeFromPreferences(context, Constants.PREF_PROJECTNAME_KEY);
+				}
+			}
+		}
 	}
 
 	public boolean renameProject(String newProjectName, Context context) {
@@ -278,7 +376,7 @@ public final class ProjectManager implements OnLoadProjectCompleteListener, OnCh
 
 		if (directoryRenamed) {
 			project.setName(newProjectName);
-			saveProject();
+			saveProject(context);
 		}
 
 		if (!directoryRenamed) {
@@ -306,6 +404,14 @@ public final class ProjectManager implements OnLoadProjectCompleteListener, OnCh
 		} else if (currentSprite.getScriptIndex(script) != -1) {
 			currentScript = script;
 		}
+	}
+
+	public UserBrick getCurrentUserBrick() {
+		return currentUserBrick;
+	}
+
+	public void setCurrentUserBrick(UserBrick brick) {
+		currentUserBrick = brick;
 	}
 
 	public void addSprite(Sprite sprite) {
@@ -357,15 +463,6 @@ public final class ProjectManager implements OnLoadProjectCompleteListener, OnCh
 		this.fileChecksumContainer = fileChecksumContainer;
 	}
 
-	private class SaveProjectAsynchronousTask extends AsyncTask<Void, Void, Void> {
-
-		@Override
-		protected Void doInBackground(Void... params) {
-			StorageHandler.getInstance().saveProject(project);
-			return null;
-		}
-	}
-
 	@Override
 	public void onTokenNotValid(FragmentActivity fragmentActivity) {
 		showLoginRegisterDialog(fragmentActivity);
@@ -384,12 +481,10 @@ public final class ProjectManager implements OnLoadProjectCompleteListener, OnCh
 
 	@Override
 	public void onLoadProjectSuccess(boolean startProjectActivity) {
-
 	}
 
 	@Override
 	public void onLoadProjectFailure() {
-
 	}
 
 	public void checkNestingBrickReferences(boolean assumeWrong) {
@@ -446,6 +541,7 @@ public final class ProjectManager implements OnLoadProjectCompleteListener, OnCh
 
 	private void correctAllNestedReferences(Script script) {
 		ArrayList<IfLogicBeginBrick> ifBeginList = new ArrayList<IfLogicBeginBrick>();
+		ArrayList<PhiroIfLogicBeginBrick> ifSensorBeginList = new ArrayList<PhiroIfLogicBeginBrick>();
 		ArrayList<LoopBeginBrick> loopBeginList = new ArrayList<LoopBeginBrick>();
 		for (Brick currentBrick : script.getBrickList()) {
 			if (currentBrick instanceof IfLogicBeginBrick) {
@@ -469,7 +565,30 @@ public final class ProjectManager implements OnLoadProjectCompleteListener, OnCh
 				((IfLogicEndBrick) currentBrick).setIfBeginBrick(ifBeginBrick);
 				((IfLogicEndBrick) currentBrick).setIfElseBrick(elseBrick);
 				ifBeginList.remove(ifBeginBrick);
+			} else if (currentBrick instanceof PhiroIfLogicBeginBrick) {
+				ifSensorBeginList.add((PhiroIfLogicBeginBrick) currentBrick);
+			} else if (currentBrick instanceof IfLogicElseBrick) {
+				PhiroIfLogicBeginBrick phiroSensorBrick = ifSensorBeginList.get(ifSensorBeginList.size() - 1);
+				phiroSensorBrick.setIfElseBrick((IfLogicElseBrick) currentBrick);
+				((IfLogicElseBrick) currentBrick).setIfBeginBrick(phiroSensorBrick);
+			} else if (currentBrick instanceof IfLogicEndBrick) {
+				PhiroIfLogicBeginBrick phiroSensorBrick = ifSensorBeginList.get(ifSensorBeginList.size() - 1);
+				IfLogicElseBrick elseBrick = phiroSensorBrick.getIfElseBrick();
+				phiroSensorBrick.setIfEndBrick((IfLogicEndBrick) currentBrick);
+				elseBrick.setIfEndBrick((IfLogicEndBrick) currentBrick);
+				((IfLogicEndBrick) currentBrick).setIfBeginBrick(phiroSensorBrick);
+				((IfLogicEndBrick) currentBrick).setIfElseBrick(elseBrick);
+				ifSensorBeginList.remove(phiroSensorBrick);
 			}
+		}
+	}
+
+	private class SaveProjectAsynchronousTask extends AsyncTask<Void, Void, Void> {
+
+		@Override
+		protected Void doInBackground(Void... params) {
+			StorageHandler.getInstance().saveProject(project);
+			return null;
 		}
 	}
 }

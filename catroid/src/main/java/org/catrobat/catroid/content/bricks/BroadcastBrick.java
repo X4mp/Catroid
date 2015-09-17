@@ -1,6 +1,6 @@
 /*
  * Catroid: An on-device visual programming system for Android devices
- * Copyright (C) 2010-2014 The Catrobat Team
+ * Copyright (C) 2010-2015 The Catrobat Team
  * (<http://developer.catrobat.org/credits>)
  *
  * This program is free software: you can redistribute it and/or modify
@@ -146,6 +146,8 @@ public class BroadcastBrick extends BrickBaseType implements BroadcastMessage {
 		Spinner broadcastSpinner = (Spinner) prototypeView.findViewById(R.id.brick_broadcast_spinner);
 		broadcastSpinner.setFocusableInTouchMode(false);
 		broadcastSpinner.setFocusable(false);
+		broadcastSpinner.setEnabled(false);
+
 		SpinnerAdapter broadcastSpinnerAdapter = MessageContainer.getMessageAdapter(context);
 		broadcastSpinner.setAdapter(broadcastSpinnerAdapter);
 		setSpinnerSelection(broadcastSpinner);
@@ -170,8 +172,7 @@ public class BroadcastBrick extends BrickBaseType implements BroadcastMessage {
 				((TextView) adapterView.getChildAt(0)).setTextColor(color);
 			}
 
-			this.alphaValue = (alphaValue);
-
+			this.alphaValue = alphaValue;
 		}
 
 		return view;
@@ -194,7 +195,7 @@ public class BroadcastBrick extends BrickBaseType implements BroadcastMessage {
 
 			@Override
 			protected boolean handleOkButton() {
-				String newMessage = (input.getText().toString()).trim();
+				String newMessage = input.getText().toString().trim();
 				if (newMessage.isEmpty() || newMessage.equals(context.getString(R.string.new_broadcast_message))) {
 					dismiss();
 					return false;
@@ -216,7 +217,6 @@ public class BroadcastBrick extends BrickBaseType implements BroadcastMessage {
 			protected String getTitle() {
 				return getString(R.string.dialog_new_broadcast_message_title);
 			}
-
 		};
 
 		editDialog.show(((FragmentActivity) context).getSupportFragmentManager(), "dialog_broadcast_brick");

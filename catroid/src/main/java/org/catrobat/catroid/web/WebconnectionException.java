@@ -1,6 +1,6 @@
 /*
  * Catroid: An on-device visual programming system for Android devices
- * Copyright (C) 2010-2014 The Catrobat Team
+ * Copyright (C) 2010-2015 The Catrobat Team
  * (<http://developer.catrobat.org/credits>)
  *
  * This program is free software: you can redistribute it and/or modify
@@ -31,11 +31,15 @@ public class WebconnectionException extends Exception {
 	public static final int ERROR_JSON = 1001;
 	public static final int ERROR_NETWORK = 1002;
 
-	private int statusCode;
-	private String message;
+	private final int statusCode;
+	private final String message;
 
 	public WebconnectionException(int statusCode, String message) {
 		super(message);
+		if (message == null) {
+			message = "Unknown Error, no exception message given.";
+		}
+
 		this.statusCode = statusCode;
 		this.message = message;
 	}
@@ -46,12 +50,8 @@ public class WebconnectionException extends Exception {
 
 	@Override
 	public String getMessage() {
-		if (message == null) {
-			message = "Unknown Error, no exception message given.";
-		}
 
 		Log.d("DEBUG", "Error #" + statusCode + ": " + message);
 		return message;
 	}
-
 }

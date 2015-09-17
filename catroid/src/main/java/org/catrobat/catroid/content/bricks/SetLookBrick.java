@@ -1,6 +1,6 @@
 /*
  * Catroid: An on-device visual programming system for Android devices
- * Copyright (C) 2010-2014 The Catrobat Team
+ * Copyright (C) 2010-2015 The Catrobat Team
  * (<http://developer.catrobat.org/credits>)
  *
  * This program is free software: you can redistribute it and/or modify
@@ -61,7 +61,6 @@ public class SetLookBrick extends BrickBaseType implements OnLookDataListChanged
 	private transient AdapterView<?> adapterView;
 
 	public SetLookBrick() {
-
 	}
 
 	public void setLook(LookData lookData) {
@@ -171,8 +170,7 @@ public class SetLookBrick extends BrickBaseType implements OnLookDataListChanged
 				((TextView) adapterView.getChildAt(0)).setTextColor(color);
 			}
 
-			this.alphaValue = (alphaValue);
-
+			this.alphaValue = alphaValue;
 		}
 
 		return view;
@@ -200,6 +198,8 @@ public class SetLookBrick extends BrickBaseType implements OnLookDataListChanged
 		Spinner setLookSpinner = (Spinner) prototypeView.findViewById(R.id.brick_set_look_spinner);
 		setLookSpinner.setFocusableInTouchMode(false);
 		setLookSpinner.setFocusable(false);
+		setLookSpinner.setEnabled(false);
+
 		SpinnerAdapter setLookSpinnerAdapter = createLookAdapter(context);
 		setLookSpinner.setAdapter(setLookSpinnerAdapter);
 		setSpinnerSelection(setLookSpinner);

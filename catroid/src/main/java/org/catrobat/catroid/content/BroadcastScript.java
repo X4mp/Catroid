@@ -1,6 +1,6 @@
 /*
  * Catroid: An on-device visual programming system for Android devices
- * Copyright (C) 2010-2014 The Catrobat Team
+ * Copyright (C) 2010-2015 The Catrobat Team
  * (<http://developer.catrobat.org/credits>)
  *
  * This program is free software: you can redistribute it and/or modify
@@ -23,13 +23,11 @@
 package org.catrobat.catroid.content;
 
 import org.catrobat.catroid.common.MessageContainer;
-import org.catrobat.catroid.content.bricks.Brick;
 import org.catrobat.catroid.content.bricks.BroadcastReceiverBrick;
-import org.catrobat.catroid.content.bricks.IfLogicEndBrick;
-import org.catrobat.catroid.content.bricks.LoopEndBrick;
 import org.catrobat.catroid.content.bricks.ScriptBrick;
+import org.catrobat.catroid.content.bricks.UserBrick;
 
-import java.util.ArrayList;
+import java.util.List;
 
 public class BroadcastScript extends Script implements BroadcastMessage {
 
@@ -66,24 +64,13 @@ public class BroadcastScript extends Script implements BroadcastMessage {
 		MessageContainer.removeReceiverScript(this.receivedMessage, this);
 		this.receivedMessage = broadcastMessage;
 		MessageContainer.addMessage(this.receivedMessage, this);
-
 	}
 
 	@Override
-	public Script copyScriptForSprite(Sprite sprite) {
+	public Script copyScriptForSprite(Sprite copySprite, List<UserBrick> preCopiedUserBricks) {
 		BroadcastScript cloneScript = new BroadcastScript(receivedMessage);
-		ArrayList<Brick> cloneBrickList = cloneScript.getBrickList();
 
-		for (Brick brick : getBrickList()) {
-			Brick copiedBrick = brick.copyBrickForSprite(sprite);
-			if (copiedBrick instanceof IfLogicEndBrick) {
-				setIfBrickReferences((IfLogicEndBrick) copiedBrick, (IfLogicEndBrick) brick);
-			} else if (copiedBrick instanceof LoopEndBrick) {
-				setLoopBrickReferences((LoopEndBrick) copiedBrick, (LoopEndBrick) brick);
-			}
-			cloneBrickList.add(copiedBrick);
-		}
-
+		doCopy(copySprite, cloneScript, preCopiedUserBricks);
 		return cloneScript;
 	}
 }

@@ -1,6 +1,6 @@
 /*
  * Catroid: An on-device visual programming system for Android devices
- * Copyright (C) 2010-2014 The Catrobat Team
+ * Copyright (C) 2010-2015 The Catrobat Team
  * (<http://developer.catrobat.org/credits>)
  *
  * This program is free software: you can redistribute it and/or modify
@@ -27,7 +27,6 @@ import android.graphics.drawable.Drawable;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
-import android.view.View.OnClickListener;
 import android.widget.BaseAdapter;
 import android.widget.CompoundButton;
 import android.widget.CompoundButton.OnCheckedChangeListener;
@@ -37,9 +36,7 @@ import com.badlogic.gdx.scenes.scene2d.actions.SequenceAction;
 
 import org.catrobat.catroid.ProjectManager;
 import org.catrobat.catroid.R;
-
 import org.catrobat.catroid.common.BrickValues;
-
 import org.catrobat.catroid.content.Sprite;
 import org.catrobat.catroid.content.actions.ExtendedActions;
 import org.catrobat.catroid.formulaeditor.Formula;
@@ -49,7 +46,7 @@ import org.catrobat.catroid.utils.Utils;
 
 import java.util.List;
 
-public class MoveNStepsBrick extends FormulaBrick implements OnClickListener {
+public class MoveNStepsBrick extends FormulaBrick {
 
 	private static final long serialVersionUID = 1L;
 
@@ -105,15 +102,15 @@ public class MoveNStepsBrick extends FormulaBrick implements OnClickListener {
 		TextView times = (TextView) view.findViewById(R.id.brick_move_n_steps_step_text_view);
 
 		if (getFormulaWithBrickField(BrickField.STEPS).isSingleNumberFormula()) {
-            try{
+			try {
 				times.setText(view.getResources().getQuantityString(
 						R.plurals.brick_move_n_step_plural,
 						Utils.convertDoubleToPluralInteger(getFormulaWithBrickField(BrickField.STEPS).interpretDouble(
 								ProjectManager.getInstance().getCurrentSprite()))
 				));
-            }catch(InterpretationException interpretationException){
-                Log.d(getClass().getSimpleName(), "Couldn't interpret Formula.", interpretationException);
-            }
+			} catch (InterpretationException interpretationException) {
+				Log.d(getClass().getSimpleName(), "Couldn't interpret Formula.", interpretationException);
+			}
 		} else {
 
 			// Random Number to get into the "other" keyword for values like 0.99 or 2.001 seconds or degrees
@@ -135,8 +132,8 @@ public class MoveNStepsBrick extends FormulaBrick implements OnClickListener {
 		TextView textSteps = (TextView) prototypeView.findViewById(R.id.brick_move_n_steps_prototype_text_view);
 		textSteps.setText(String.valueOf(BrickValues.MOVE_STEPS));
 		TextView times = (TextView) prototypeView.findViewById(R.id.brick_move_n_steps_step_text_view);
-        times.setText(context.getResources().getQuantityString(R.plurals.brick_move_n_step_plural,
-                Utils.convertDoubleToPluralInteger(BrickValues.MOVE_STEPS)));
+		times.setText(context.getResources().getQuantityString(R.plurals.brick_move_n_step_plural,
+				Utils.convertDoubleToPluralInteger(BrickValues.MOVE_STEPS)));
 		return prototypeView;
 	}
 
@@ -157,24 +154,20 @@ public class MoveNStepsBrick extends FormulaBrick implements OnClickListener {
 			moveNStepsEdit.setTextColor(moveNStepsEdit.getTextColors().withAlpha(alphaValue));
 			moveNStepsEdit.getBackground().setAlpha(alphaValue);
 
-			this.alphaValue = (alphaValue);
-
+			this.alphaValue = alphaValue;
 		}
 
 		return view;
 	}
 
 	@Override
-	public void onClick(View view) {
-		if (checkbox.getVisibility() == View.VISIBLE) {
-			return;
-		}
-		FormulaEditorFragment.showFragment(view, this, getFormulaWithBrickField(BrickField.STEPS));
-	}
-
-	@Override
 	public List<SequenceAction> addActionToSequence(Sprite sprite, SequenceAction sequence) {
 		sequence.addAction(ExtendedActions.moveNSteps(sprite, getFormulaWithBrickField(BrickField.STEPS)));
 		return null;
+	}
+
+	@Override
+	public void showFormulaEditorToEditFormula(View view) {
+		FormulaEditorFragment.showFragment(view, this, BrickField.STEPS);
 	}
 }

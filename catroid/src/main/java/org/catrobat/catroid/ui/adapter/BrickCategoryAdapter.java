@@ -1,6 +1,6 @@
 /*
  * Catroid: An on-device visual programming system for Android devices
- * Copyright (C) 2010-2014 The Catrobat Team
+ * Copyright (C) 2010-2015 The Catrobat Team
  * (<http://developer.catrobat.org/credits>)
  *
  * This program is free software: you can redistribute it and/or modify
@@ -58,5 +58,4 @@ public class BrickCategoryAdapter extends BaseAdapter {
 	public View getView(int position, View convertView, ViewGroup parent) {
 		return categories.get(position);
 	}
-
 }

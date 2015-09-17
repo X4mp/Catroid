@@ -1,6 +1,6 @@
 /*
  * Catroid: An on-device visual programming system for Android devices
- * Copyright (C) 2010-2014 The Catrobat Team
+ * Copyright (C) 2010-2015 The Catrobat Team
  * (<http://developer.catrobat.org/credits>)
  *
  * This program is free software: you can redistribute it and/or modify
@@ -25,6 +25,7 @@ package org.catrobat.catroid.content.bricks;
 import android.content.Context;
 import android.content.res.ColorStateList;
 import android.graphics.drawable.Drawable;
+import android.view.Gravity;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemSelectedListener;
@@ -50,7 +51,7 @@ public class LegoNxtMotorStopBrick extends BrickBaseType implements OnItemSelect
 	private transient AdapterView<?> adapterView;
 
 	public static enum Motor {
-		MOTOR_A, MOTOR_B, MOTOR_C, MOTOR_A_C, ALL_MOTORS
+		MOTOR_A, MOTOR_B, MOTOR_C, MOTOR_B_C, ALL_MOTORS
 	}
 
 	public LegoNxtMotorStopBrick(Motor motor) {
@@ -82,6 +83,7 @@ public class LegoNxtMotorStopBrick extends BrickBaseType implements OnItemSelect
 		Spinner legoSpinner = (Spinner) prototypeView.findViewById(R.id.stop_motor_spinner);
 		legoSpinner.setFocusableInTouchMode(false);
 		legoSpinner.setFocusable(false);
+		legoSpinner.setEnabled(false);
 
 		ArrayAdapter<CharSequence> motorAdapter = ArrayAdapter.createFromResource(context,
 				R.array.nxt_stop_motor_chooser, android.R.layout.simple_spinner_item);
@@ -89,6 +91,7 @@ public class LegoNxtMotorStopBrick extends BrickBaseType implements OnItemSelect
 
 		legoSpinner.setAdapter(motorAdapter);
 		legoSpinner.setSelection(motorEnum.ordinal());
+		legoSpinner.setGravity(Gravity.CENTER);
 		return prototypeView;
 	}
 
@@ -135,6 +138,7 @@ public class LegoNxtMotorStopBrick extends BrickBaseType implements OnItemSelect
 
 		motorSpinner.setAdapter(motorAdapter);
 		motorSpinner.setSelection(motorEnum.ordinal());
+		motorSpinner.setGravity(Gravity.CENTER);
 		return view;
 	}
 
@@ -167,8 +171,7 @@ public class LegoNxtMotorStopBrick extends BrickBaseType implements OnItemSelect
 				((TextView) adapterView.getChildAt(0)).setTextColor(color);
 			}
 
-			this.alphaValue = (alphaValue);
-
+			this.alphaValue = alphaValue;
 		}
 
 		return view;
@@ -179,5 +182,4 @@ public class LegoNxtMotorStopBrick extends BrickBaseType implements OnItemSelect
 		sequence.addAction(ExtendedActions.legoNxtMotorStop(motorEnum));
 		return null;
 	}
-
 }

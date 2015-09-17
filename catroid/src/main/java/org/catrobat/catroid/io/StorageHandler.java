@@ -1,6 +1,6 @@
 /*
  * Catroid: An on-device visual programming system for Android devices
- * Copyright (C) 2010-2014 The Catrobat Team
+ * Copyright (C) 2010-2015 The Catrobat Team
  * (<http://developer.catrobat.org/credits>)
  *
  * This program is free software: you can redistribute it and/or modify
@@ -35,28 +35,32 @@ import org.catrobat.catroid.ProjectManager;
 import org.catrobat.catroid.common.Constants;
 import org.catrobat.catroid.common.FileChecksumContainer;
 import org.catrobat.catroid.common.LookData;
-import org.catrobat.catroid.common.ProjectData;
 import org.catrobat.catroid.common.SoundInfo;
 import org.catrobat.catroid.content.BroadcastScript;
+import org.catrobat.catroid.content.LegoNXTSetting;
 import org.catrobat.catroid.content.Project;
 import org.catrobat.catroid.content.Script;
+import org.catrobat.catroid.content.Setting;
 import org.catrobat.catroid.content.Sprite;
 import org.catrobat.catroid.content.StartScript;
 import org.catrobat.catroid.content.WhenScript;
 import org.catrobat.catroid.content.XmlHeader;
+import org.catrobat.catroid.content.bricks.AddItemToUserListBrick;
+import org.catrobat.catroid.content.bricks.Brick;
 import org.catrobat.catroid.content.bricks.BrickBaseType;
 import org.catrobat.catroid.content.bricks.BroadcastBrick;
 import org.catrobat.catroid.content.bricks.BroadcastReceiverBrick;
 import org.catrobat.catroid.content.bricks.BroadcastWaitBrick;
 import org.catrobat.catroid.content.bricks.ChangeBrightnessByNBrick;
-import org.catrobat.catroid.content.bricks.ChangeGhostEffectByNBrick;
 import org.catrobat.catroid.content.bricks.ChangeSizeByNBrick;
+import org.catrobat.catroid.content.bricks.ChangeTransparencyByNBrick;
 import org.catrobat.catroid.content.bricks.ChangeVariableBrick;
 import org.catrobat.catroid.content.bricks.ChangeVolumeByNBrick;
 import org.catrobat.catroid.content.bricks.ChangeXByNBrick;
 import org.catrobat.catroid.content.bricks.ChangeYByNBrick;
 import org.catrobat.catroid.content.bricks.ClearGraphicEffectBrick;
 import org.catrobat.catroid.content.bricks.ComeToFrontBrick;
+import org.catrobat.catroid.content.bricks.DeleteItemOfUserListBrick;
 import org.catrobat.catroid.content.bricks.DroneFlipBrick;
 import org.catrobat.catroid.content.bricks.DroneLandBrick;
 import org.catrobat.catroid.content.bricks.DroneMoveBackwardBrick;
@@ -72,13 +76,15 @@ import org.catrobat.catroid.content.bricks.FormulaBrick;
 import org.catrobat.catroid.content.bricks.GlideToBrick;
 import org.catrobat.catroid.content.bricks.GoNStepsBackBrick;
 import org.catrobat.catroid.content.bricks.HideBrick;
+import org.catrobat.catroid.content.bricks.HideTextBrick;
 import org.catrobat.catroid.content.bricks.IfLogicBeginBrick;
 import org.catrobat.catroid.content.bricks.IfLogicElseBrick;
 import org.catrobat.catroid.content.bricks.IfLogicEndBrick;
 import org.catrobat.catroid.content.bricks.IfOnEdgeBounceBrick;
+import org.catrobat.catroid.content.bricks.InsertItemIntoUserListBrick;
 import org.catrobat.catroid.content.bricks.LedOffBrick;
 import org.catrobat.catroid.content.bricks.LedOnBrick;
-import org.catrobat.catroid.content.bricks.LegoNxtMotorActionBrick;
+import org.catrobat.catroid.content.bricks.LegoNxtMotorMoveBrick;
 import org.catrobat.catroid.content.bricks.LegoNxtMotorStopBrick;
 import org.catrobat.catroid.content.bricks.LegoNxtMotorTurnAngleBrick;
 import org.catrobat.catroid.content.bricks.LegoNxtPlayToneBrick;
@@ -88,30 +94,44 @@ import org.catrobat.catroid.content.bricks.LoopEndlessBrick;
 import org.catrobat.catroid.content.bricks.MoveNStepsBrick;
 import org.catrobat.catroid.content.bricks.NextLookBrick;
 import org.catrobat.catroid.content.bricks.NoteBrick;
+import org.catrobat.catroid.content.bricks.PhiroIfLogicBeginBrick;
+import org.catrobat.catroid.content.bricks.PhiroMotorMoveBackwardBrick;
+import org.catrobat.catroid.content.bricks.PhiroMotorMoveForwardBrick;
+import org.catrobat.catroid.content.bricks.PhiroMotorStopBrick;
+import org.catrobat.catroid.content.bricks.PhiroPlayToneBrick;
+import org.catrobat.catroid.content.bricks.PhiroRGBLightBrick;
 import org.catrobat.catroid.content.bricks.PlaceAtBrick;
 import org.catrobat.catroid.content.bricks.PlaySoundBrick;
 import org.catrobat.catroid.content.bricks.PointInDirectionBrick;
 import org.catrobat.catroid.content.bricks.PointToBrick;
 import org.catrobat.catroid.content.bricks.RepeatBrick;
+import org.catrobat.catroid.content.bricks.ReplaceItemInUserListBrick;
 import org.catrobat.catroid.content.bricks.SetBrightnessBrick;
-import org.catrobat.catroid.content.bricks.SetGhostEffectBrick;
 import org.catrobat.catroid.content.bricks.SetLookBrick;
 import org.catrobat.catroid.content.bricks.SetSizeToBrick;
+import org.catrobat.catroid.content.bricks.SetTransparencyBrick;
 import org.catrobat.catroid.content.bricks.SetVariableBrick;
 import org.catrobat.catroid.content.bricks.SetVolumeToBrick;
 import org.catrobat.catroid.content.bricks.SetXBrick;
 import org.catrobat.catroid.content.bricks.SetYBrick;
 import org.catrobat.catroid.content.bricks.ShowBrick;
+import org.catrobat.catroid.content.bricks.ShowTextBrick;
 import org.catrobat.catroid.content.bricks.SpeakBrick;
 import org.catrobat.catroid.content.bricks.StopAllSoundsBrick;
 import org.catrobat.catroid.content.bricks.TurnLeftBrick;
 import org.catrobat.catroid.content.bricks.TurnRightBrick;
+import org.catrobat.catroid.content.bricks.UserBrick;
+import org.catrobat.catroid.content.bricks.UserBrickParameter;
+import org.catrobat.catroid.content.bricks.UserScriptDefinitionBrick;
+import org.catrobat.catroid.content.bricks.UserScriptDefinitionBrickElement;
+import org.catrobat.catroid.content.bricks.UserScriptDefinitionBrickElements;
 import org.catrobat.catroid.content.bricks.VibrationBrick;
 import org.catrobat.catroid.content.bricks.WaitBrick;
 import org.catrobat.catroid.content.bricks.WhenBrick;
 import org.catrobat.catroid.content.bricks.WhenStartedBrick;
+import org.catrobat.catroid.formulaeditor.DataContainer;
+import org.catrobat.catroid.formulaeditor.UserList;
 import org.catrobat.catroid.formulaeditor.UserVariable;
-import org.catrobat.catroid.formulaeditor.UserVariablesContainer;
 import org.catrobat.catroid.utils.ImageEditing;
 import org.catrobat.catroid.utils.UtilFile;
 import org.catrobat.catroid.utils.Utils;
@@ -123,8 +143,11 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.channels.FileChannel;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Set;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -136,6 +159,7 @@ import static org.catrobat.catroid.common.Constants.IMAGE_DIRECTORY;
 import static org.catrobat.catroid.common.Constants.NO_MEDIA_FILE;
 import static org.catrobat.catroid.common.Constants.PROJECTCODE_NAME;
 import static org.catrobat.catroid.common.Constants.PROJECTCODE_NAME_TMP;
+import static org.catrobat.catroid.common.Constants.PROJECTPERMISSIONS_NAME;
 import static org.catrobat.catroid.common.Constants.SOUND_DIRECTORY;
 import static org.catrobat.catroid.utils.Utils.buildPath;
 import static org.catrobat.catroid.utils.Utils.buildProjectPath;
@@ -146,13 +170,12 @@ public final class StorageHandler {
 	private static final String XML_HEADER = "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\" ?>\n";
 	private static final int JPG_COMPRESSION_SETTING = 95;
 
-	private XStreamToSupportCatrobatLanguageVersion092AndBefore xstream;
+	private XStreamToSupportCatrobatLanguageVersion096AndBefore xstream;
 
 	private File backPackSoundDirectory;
 	private FileInputStream fileInputStream;
 
 	private Lock loadSaveLock = new ReentrantLock();
-
 	// TODO: Since the StorageHandler constructor throws an exception, the member INSTANCE couldn't be assigned
 	// directly and therefore we need this static block. Should be refactored and removed in the future.
 	static {
@@ -162,16 +185,18 @@ public final class StorageHandler {
 			throw new RuntimeException("Initialize StorageHandler failed");
 		}
 	}
-
 	private StorageHandler() throws IOException {
-		xstream = new XStreamToSupportCatrobatLanguageVersion092AndBefore(new PureJavaReflectionProvider(new FieldDictionary(new CatroidFieldKeySorter())));
+		xstream = new XStreamToSupportCatrobatLanguageVersion096AndBefore(new PureJavaReflectionProvider(new FieldDictionary(new CatroidFieldKeySorter())));
 		xstream.processAnnotations(Project.class);
 		xstream.processAnnotations(XmlHeader.class);
-		xstream.processAnnotations(UserVariablesContainer.class);
+		xstream.processAnnotations(DataContainer.class);
+		xstream.processAnnotations(Setting.class);
 		xstream.registerConverter(new XStreamConcurrentFormulaHashMapConverter());
 		xstream.registerConverter(new XStreamUserVariableConverter());
 		xstream.registerConverter(new XStreamBrickConverter(xstream.getMapper(), xstream.getReflectionProvider()));
 		xstream.registerConverter(new XStreamScriptConverter(xstream.getMapper(), xstream.getReflectionProvider()));
+		xstream.registerConverter(new XStreamSettingConverter(xstream.getMapper(), xstream.getReflectionProvider()));
+
 		setXstreamAliases();
 
 		if (!Utils.externalStorageAvailable()) {
@@ -194,9 +219,14 @@ public final class StorageHandler {
 				bitmap.compress(CompressFormat.PNG, 0, outputStream);
 			}
 			outputStream.flush();
-			outputStream.close();
 		} catch (IOException ioException) {
 			Log.e(TAG, Log.getStackTraceString(ioException));
+		} finally {
+			try {
+				outputStream.close();
+			} catch (IOException e) {
+				Log.e(TAG, "Could not close outputstream.", e);
+			}
 		}
 	}
 
@@ -204,6 +234,7 @@ public final class StorageHandler {
 		xstream.alias("look", LookData.class);
 		xstream.alias("sound", SoundInfo.class);
 		xstream.alias("userVariable", UserVariable.class);
+		xstream.alias("userList", UserList.class);
 
 		xstream.alias("script", Script.class);
 		xstream.alias("object", Sprite.class);
@@ -212,11 +243,12 @@ public final class StorageHandler {
 		xstream.alias("script", WhenScript.class);
 		xstream.alias("script", BroadcastScript.class);
 
+		xstream.alias("brick", AddItemToUserListBrick.class);
 		xstream.alias("brick", BroadcastBrick.class);
 		xstream.alias("brick", BroadcastReceiverBrick.class);
 		xstream.alias("brick", BroadcastWaitBrick.class);
 		xstream.alias("brick", ChangeBrightnessByNBrick.class);
-		xstream.alias("brick", ChangeGhostEffectByNBrick.class);
+		xstream.alias("brick", ChangeTransparencyByNBrick.class);
 		xstream.alias("brick", ChangeSizeByNBrick.class);
 		xstream.alias("brick", ChangeVariableBrick.class);
 		xstream.alias("brick", ChangeVolumeByNBrick.class);
@@ -224,17 +256,20 @@ public final class StorageHandler {
 		xstream.alias("brick", ChangeYByNBrick.class);
 		xstream.alias("brick", ClearGraphicEffectBrick.class);
 		xstream.alias("brick", ComeToFrontBrick.class);
+		xstream.alias("brick", DeleteItemOfUserListBrick.class);
 		xstream.alias("brick", ForeverBrick.class);
 		xstream.alias("brick", GlideToBrick.class);
 		xstream.alias("brick", GoNStepsBackBrick.class);
 		xstream.alias("brick", HideBrick.class);
+		xstream.alias("brick", HideTextBrick.class);
 		xstream.alias("brick", IfLogicBeginBrick.class);
 		xstream.alias("brick", IfLogicElseBrick.class);
 		xstream.alias("brick", IfLogicEndBrick.class);
 		xstream.alias("brick", IfOnEdgeBounceBrick.class);
+		xstream.alias("brick", InsertItemIntoUserListBrick.class);
 		xstream.alias("brick", LedOffBrick.class);
 		xstream.alias("brick", LedOnBrick.class);
-		xstream.alias("brick", LegoNxtMotorActionBrick.class);
+		xstream.alias("brick", LegoNxtMotorMoveBrick.class);
 		xstream.alias("brick", LegoNxtMotorStopBrick.class);
 		xstream.alias("brick", LegoNxtMotorTurnAngleBrick.class);
 		xstream.alias("brick", LegoNxtPlayToneBrick.class);
@@ -249,8 +284,9 @@ public final class StorageHandler {
 		xstream.alias("brick", PointInDirectionBrick.class);
 		xstream.alias("brick", PointToBrick.class);
 		xstream.alias("brick", RepeatBrick.class);
+		xstream.alias("brick", ReplaceItemInUserListBrick.class);
 		xstream.alias("brick", SetBrightnessBrick.class);
-		xstream.alias("brick", SetGhostEffectBrick.class);
+		xstream.alias("brick", SetTransparencyBrick.class);
 		xstream.alias("brick", SetLookBrick.class);
 		xstream.alias("brick", SetSizeToBrick.class);
 		xstream.alias("brick", SetVariableBrick.class);
@@ -258,10 +294,13 @@ public final class StorageHandler {
 		xstream.alias("brick", SetXBrick.class);
 		xstream.alias("brick", SetYBrick.class);
 		xstream.alias("brick", ShowBrick.class);
+		xstream.alias("brick", ShowTextBrick.class);
 		xstream.alias("brick", SpeakBrick.class);
 		xstream.alias("brick", StopAllSoundsBrick.class);
 		xstream.alias("brick", TurnLeftBrick.class);
 		xstream.alias("brick", TurnRightBrick.class);
+		xstream.alias("brick", UserBrick.class);
+		xstream.alias("brick", UserScriptDefinitionBrick.class);
 		xstream.alias("brick", VibrationBrick.class);
 		xstream.alias("brick", WaitBrick.class);
 		xstream.alias("brick", WhenBrick.class);
@@ -277,6 +316,21 @@ public final class StorageHandler {
 		xstream.alias("brick", DroneMoveDownBrick.class);
 		xstream.alias("brick", DroneMoveLeftBrick.class);
 		xstream.alias("brick", DroneMoveRightBrick.class);
+
+		xstream.alias("brick", PhiroMotorMoveBackwardBrick.class);
+		xstream.alias("brick", PhiroMotorMoveForwardBrick.class);
+		xstream.alias("brick", PhiroMotorStopBrick.class);
+		xstream.alias("brick", PhiroPlayToneBrick.class);
+		xstream.alias("brick", PhiroRGBLightBrick.class);
+		xstream.alias("brick", PhiroIfLogicBeginBrick.class);
+
+		xstream.alias("userBrickElements", UserScriptDefinitionBrickElements.class);
+		xstream.alias("userBrickElement", UserScriptDefinitionBrickElement.class);
+		xstream.alias("userBrickParameter", UserBrickParameter.class);
+
+		xstream.alias("setting", LegoNXTSetting.class);
+		xstream.alias("nxtPort", LegoNXTSetting.NXTPort.class);
+		xstream.aliasAttribute(LegoNXTSetting.NXTPort.class, "number", "number");
 
 		xstream.aliasField("formulaList", FormulaBrick.class, "formulaMap");
 		xstream.aliasField("object", BrickBaseType.class, "sprite");
@@ -303,7 +357,8 @@ public final class StorageHandler {
 			File projectCodeFile = new File(buildProjectPath(projectName), PROJECTCODE_NAME);
 			Log.d(TAG, "path: " + projectCodeFile.getAbsolutePath());
 			fileInputStream = new FileInputStream(projectCodeFile);
-			return (Project) xstream.getProjectFromXML(projectCodeFile);
+			Project project = (Project) xstream.getProjectFromXML(projectCodeFile);
+			return project;
 		} catch (Exception exception) {
 			Log.e(TAG, "Loading project " + projectName + " failed.", exception);
 			return null;
@@ -331,11 +386,11 @@ public final class StorageHandler {
 		return false;
 	}
 
-
 	public boolean saveProject(Project project) {
 		BufferedWriter writer = null;
 
 		if (project == null) {
+			Log.d(TAG, "project is null!");
 			return false;
 		}
 
@@ -350,7 +405,6 @@ public final class StorageHandler {
 		File currentCodeFile = null;
 
 		try {
-
 			projectXml = XML_HEADER.concat(xstream.toXML(project));
 			tmpCodeFile = new File(buildProjectPath(project.getName()), PROJECTCODE_NAME_TMP);
 			currentCodeFile = new File(buildProjectPath(project.getName()), PROJECTCODE_NAME);
@@ -365,7 +419,6 @@ public final class StorageHandler {
 					}
 					Log.d(TAG, "Project version differ <" + oldProjectXml.length() + "> <"
 							+ projectXml.length() + ">. update " + currentCodeFile.getName());
-
 				} catch (Exception exception) {
 					Log.e(TAG, "Opening old project " + currentCodeFile.getName() + " failed.", exception);
 					return false;
@@ -378,6 +431,16 @@ public final class StorageHandler {
 			writer = new BufferedWriter(new FileWriter(tmpCodeFile), Constants.BUFFER_8K);
 			writer.write(projectXml);
 			writer.flush();
+
+			File permissionFile = new File(buildProjectPath(project.getName()), PROJECTPERMISSIONS_NAME);
+			writer = new BufferedWriter(new FileWriter(permissionFile), Constants.BUFFER_8K);
+
+			for (String resource : generatePermissionsSetFromResource(project.getRequiredResources())) {
+				writer.write(resource);
+				writer.newLine();
+			}
+			writer.flush();
+
 			return true;
 		} catch (Exception exception) {
 			Log.e(TAG, "Saving project " + project.getName() + " failed.", exception);
@@ -394,7 +457,6 @@ public final class StorageHandler {
 					if (!tmpCodeFile.renameTo(currentCodeFile)) {
 						Log.e(TAG, "Could not rename " + currentCodeFile.getName());
 					}
-
 				} catch (IOException ioException) {
 					Log.e(TAG, "Failed closing the buffered writer", ioException);
 				}
@@ -422,13 +484,12 @@ public final class StorageHandler {
 					return;
 				}
 
-				Log.w(TAG, "Process interrupted before renaming. Rename " + PROJECTCODE_NAME_TMP +
-						" to " + PROJECTCODE_NAME);
+				Log.w(TAG, "Process interrupted before renaming. Rename " + PROJECTCODE_NAME_TMP
+						+ " to " + PROJECTCODE_NAME);
 
 				if (!tmpCodeFile.renameTo(currentCodeFile)) {
 					Log.e(TAG, "Could not rename " + tmpCodeFile.getName());
 				}
-
 			}
 		} catch (Exception exception) {
 			Log.e(TAG, "Exception " + exception);
@@ -438,6 +499,7 @@ public final class StorageHandler {
 	}
 
 	private void createProjectDataStructure(File projectDirectory) throws IOException {
+		Log.d(TAG, "create Project Data structure");
 		createCatroidRoot();
 		projectDirectory.mkdir();
 
@@ -473,25 +535,26 @@ public final class StorageHandler {
 	}
 
 	public void clearBackPackSoundDirectory() {
-		if (backPackSoundDirectory.listFiles().length > 1) {
-			for (File node : backPackSoundDirectory.listFiles()) {
-				if (!(node.getName().equals(".nomedia"))) {
-					node.delete();
+		try {
+			if (backPackSoundDirectory.listFiles().length > 1) {
+				for (File node : backPackSoundDirectory.listFiles()) {
+					if (!(node.getName().equals(".nomedia"))) {
+						node.delete();
+					}
 				}
 			}
+		} catch (NullPointerException nullPointerException) {
+			Log.e(TAG, Log.getStackTraceString(nullPointerException));
 		}
+	}
+
+	public boolean deleteProject(String projectName) {
+		return UtilFile.deleteDirectory(new File(buildProjectPath(projectName)));
 	}
 
 	public boolean deleteProject(Project project) {
 		if (project != null) {
-			return UtilFile.deleteDirectory(new File(buildProjectPath(project.getName())));
-		}
-		return false;
-	}
-
-	public boolean deleteProject(ProjectData projectData) {
-		if (projectData != null) {
-			return UtilFile.deleteDirectory(new File(buildProjectPath(projectData.projectName)));
+			return deleteProject(project.getName());
 		}
 		return false;
 	}
@@ -499,7 +562,7 @@ public final class StorageHandler {
 	public boolean projectExists(String projectName) {
 		List<String> projectNameList = UtilFile.getProjectNames(new File(DEFAULT_ROOT));
 		for (String projectNameIterator : projectNameList) {
-			if ((projectNameIterator.equals(projectName))) {
+			if (projectNameIterator.equals(projectName)) {
 				return true;
 			}
 		}
@@ -559,7 +622,7 @@ public final class StorageHandler {
 		FileChecksumContainer checksumCont = ProjectManager.getInstance().getFileChecksumContainer();
 
 		File outputFileDirectory = new File(imageDirectory.getAbsolutePath());
-		if (outputFileDirectory.exists() == false) {
+		if (!outputFileDirectory.exists()) {
 			outputFileDirectory.mkdirs();
 		}
 
@@ -596,7 +659,7 @@ public final class StorageHandler {
 		}
 
 		File outputFileDirectory = new File(tempDirectory.getAbsolutePath());
-		if (outputFileDirectory.exists() == false) {
+		if (!outputFileDirectory.exists()) {
 			outputFileDirectory.mkdirs();
 		}
 
@@ -654,6 +717,19 @@ public final class StorageHandler {
 		}
 	}
 
+	public void deleteAllFile(String filepath) {
+
+		File toDelete = new File(filepath);
+
+		if (toDelete.isDirectory()) {
+			Log.d(TAG, "file is directory" + filepath);
+			for (String file : toDelete.list()) {
+				deleteAllFile(file);
+			}
+		}
+		toDelete.delete();
+	}
+
 	public void fillChecksumContainer() {
 		//FileChecksumContainer container = ProjectManager.getInstance().getFileChecksumContainer();
 		//if (container == null) {
@@ -699,4 +775,64 @@ public final class StorageHandler {
 		fileChecksumContainer.addChecksum(checksumSource, destinationFile.getAbsolutePath());
 	}
 
+	private Set<String> generatePermissionsSetFromResource(int resources) {
+		Set<String> permissionsSet = new HashSet<String>();
+
+		if ((resources & Brick.TEXT_TO_SPEECH) > 0) {
+			permissionsSet.add(Constants.TEXT_TO_SPEECH);
+		}
+		if ((resources & Brick.BLUETOOTH_LEGO_NXT) > 0) {
+			permissionsSet.add(Constants.BLUETOOTH_LEGO_NXT);
+		}
+		if ((resources & Brick.ARDRONE_SUPPORT) > 0) {
+			permissionsSet.add(Constants.ARDRONE_SUPPORT);
+		}
+		if ((resources & Brick.BLUETOOTH_PHIRO) > 0) {
+			permissionsSet.add(Constants.BLUETOOTH_PHIRO_PRO);
+		}
+		if ((resources & Brick.CAMERA_LED) > 0) {
+			permissionsSet.add(Constants.CAMERA_LED);
+		}
+		if ((resources & Brick.VIBRATOR) > 0) {
+			permissionsSet.add(Constants.VIBRATOR);
+		}
+		if ((resources & Brick.FACE_DETECTION) > 0) {
+			permissionsSet.add(Constants.FACE_DETECTION);
+		}
+		return permissionsSet;
+	}
+
+	public boolean copyImageFiles(String targetProject, String sourceProject) {
+		return copyFiles(targetProject, sourceProject, false);
+	}
+
+	public boolean copySoundFiles(String targetProject, String sourceProject) {
+		return copyFiles(targetProject, sourceProject, true);
+	}
+
+	private boolean copyFiles(String targetProject, String sourceProject, boolean copySoundFiles) {
+		String type = IMAGE_DIRECTORY;
+		if (copySoundFiles) {
+			type = SOUND_DIRECTORY;
+		}
+		File targetDirectory = new File(buildPath(buildProjectPath(targetProject), type));
+		File sourceDirectory = new File(buildPath(buildProjectPath(sourceProject), type));
+		if (!targetDirectory.exists() || !sourceDirectory.exists()) {
+			return false;
+		}
+		try {
+			for (File sourceFile : sourceDirectory.listFiles()) {
+				File targetFile = new File(targetDirectory.getAbsolutePath(), sourceFile.getName());
+				FileChannel source = new FileInputStream(sourceFile).getChannel();
+				FileChannel target = new FileOutputStream(targetFile).getChannel();
+				target.transferFrom(source, 0, source.size());
+				source.close();
+				target.close();
+			}
+		} catch (IOException e) {
+			Log.e(TAG, e.getMessage());
+			return false;
+		}
+		return true;
+	}
 }

@@ -1,6 +1,6 @@
 /*
  * Catroid: An on-device visual programming system for Android devices
- * Copyright (C) 2010-2014 The Catrobat Team
+ * Copyright (C) 2010-2015 The Catrobat Team
  * (<http://developer.catrobat.org/credits>)
  *
  * This program is free software: you can redistribute it and/or modify
@@ -26,7 +26,6 @@ import android.content.Context;
 import android.graphics.drawable.Drawable;
 import android.util.Log;
 import android.view.View;
-import android.view.View.OnClickListener;
 import android.widget.BaseAdapter;
 import android.widget.CompoundButton;
 import android.widget.CompoundButton.OnCheckedChangeListener;
@@ -46,7 +45,7 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
-public class IfLogicBeginBrick extends FormulaBrick implements NestingBrick, OnClickListener {
+public class IfLogicBeginBrick extends FormulaBrick implements NestingBrick {
 	private static final long serialVersionUID = 1L;
 	private static final String TAG = IfLogicBeginBrick.class.getSimpleName();
 	public static final int EXECUTE_ELSE_PART = -1;
@@ -99,6 +98,11 @@ public class IfLogicBeginBrick extends FormulaBrick implements NestingBrick, OnC
 	@Override
 	public Brick clone() {
 		return new IfLogicBeginBrick(getFormulaWithBrickField(BrickField.IF_CONDITION).clone());
+	}
+
+	@Override
+	public void showFormulaEditorToEditFormula(View view) {
+		FormulaEditorFragment.showFragment(view, this, BrickField.IF_CONDITION);
 	}
 
 	@Override
@@ -155,8 +159,7 @@ public class IfLogicBeginBrick extends FormulaBrick implements NestingBrick, OnC
 			editX.setTextColor(editX.getTextColors().withAlpha(alphaValue));
 			editX.getBackground().setAlpha(alphaValue);
 
-			this.alphaValue = (alphaValue);
-
+			this.alphaValue = alphaValue;
 		}
 
 		return view;
@@ -171,20 +174,8 @@ public class IfLogicBeginBrick extends FormulaBrick implements NestingBrick, OnC
 	}
 
 	@Override
-	public void onClick(View view) {
-		if (checkbox.getVisibility() == View.VISIBLE) {
-			return;
-		}
-		FormulaEditorFragment.showFragment(view, this, getFormulaWithBrickField(BrickField.IF_CONDITION));
-	}
-
-	@Override
 	public boolean isInitialized() {
-		if (ifElseBrick == null) {
-			return false;
-		} else {
-			return true;
-		}
+		return ifElseBrick != null;
 	}
 
 	@Override
@@ -212,11 +203,7 @@ public class IfLogicBeginBrick extends FormulaBrick implements NestingBrick, OnC
 
 	@Override
 	public boolean isDraggableOver(Brick brick) {
-		if (brick == ifElseBrick) {
-			return false;
-		} else {
-			return true;
-		}
+		return brick != ifElseBrick;
 	}
 
 	@Override
@@ -243,5 +230,4 @@ public class IfLogicBeginBrick extends FormulaBrick implements NestingBrick, OnC
 		this.copy = copyBrick;
 		return copyBrick;
 	}
-
 }

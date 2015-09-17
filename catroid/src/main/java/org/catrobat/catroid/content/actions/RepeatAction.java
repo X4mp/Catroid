@@ -1,6 +1,6 @@
 /*
  * Catroid: An on-device visual programming system for Android devices
- * Copyright (C) 2010-2014 The Catrobat Team
+ * Copyright (C) 2010-2015 The Catrobat Team
  * (<http://developer.catrobat.org/credits>)
  *
  * This program is free software: you can redistribute it and/or modify
@@ -41,17 +41,17 @@ public class RepeatAction extends com.badlogic.gdx.scenes.scene2d.actions.Repeat
 	private boolean isForeverRepeat = false;
 
 	@Override
-	public boolean act(float delta) {
+	public boolean delegate(float delta) {
 
 		if (!isRepeatActionInitialized) {
 			isRepeatActionInitialized = true;
 			try {
 				Double interpretation = repeatCount == null ? Double.valueOf(0d) : repeatCount.interpretDouble(sprite);
 				repeatCountValue = interpretation.intValue();
-            } catch (InterpretationException interpretationException) {
-                repeatCountValue = 0;
-                Log.d(getClass().getSimpleName(), "Formula interpretation for this specific Brick failed.", interpretationException);
-            }
+			} catch (InterpretationException interpretationException) {
+				repeatCountValue = 0;
+				Log.d(getClass().getSimpleName(), "Formula interpretation for this specific Brick failed.", interpretationException);
+			}
 		}
 
 		if (!isCurrentLoopInitialized) {
@@ -76,7 +76,6 @@ public class RepeatAction extends com.badlogic.gdx.scenes.scene2d.actions.Repeat
 			isCurrentLoopInitialized = false;
 			if (action != null) {
 				action.restart();
-
 			}
 		}
 		return false;
@@ -101,5 +100,4 @@ public class RepeatAction extends com.badlogic.gdx.scenes.scene2d.actions.Repeat
 	public void setIsForeverRepeat(boolean isForeverRepeat) {
 		this.isForeverRepeat = isForeverRepeat;
 	}
-
 }

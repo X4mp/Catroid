@@ -1,6 +1,6 @@
 /*
  * Catroid: An on-device visual programming system for Android devices
- * Copyright (C) 2010-2014 The Catrobat Team
+ * Copyright (C) 2010-2015 The Catrobat Team
  * (<http://developer.catrobat.org/credits>)
  *
  * This program is free software: you can redistribute it and/or modify
@@ -47,7 +47,7 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
-public class RepeatBrick extends FormulaBrick implements LoopBeginBrick, OnClickListener {
+public class RepeatBrick extends FormulaBrick implements LoopBeginBrick {
 	private static final long serialVersionUID = 1L;
 
 	private transient View prototypeView;
@@ -69,7 +69,7 @@ public class RepeatBrick extends FormulaBrick implements LoopBeginBrick, OnClick
 	public int getRequiredResources() {
 		return getFormulaWithBrickField(BrickField.TIMES_TO_REPEAT).getRequiredResources();
 	}
-	
+
 	public RepeatBrick(Formula timesToRepeat) {
 		initializeBrickFields(timesToRepeat);
 	}
@@ -80,8 +80,13 @@ public class RepeatBrick extends FormulaBrick implements LoopBeginBrick, OnClick
 	}
 
 	@Override
-	public Brick clone()  {
+	public Brick clone() {
 		return new RepeatBrick(getFormulaWithBrickField(BrickField.TIMES_TO_REPEAT).clone());
+	}
+
+	@Override
+	public void showFormulaEditorToEditFormula(View view) {
+		FormulaEditorFragment.showFragment(view, this, BrickField.TIMES_TO_REPEAT);
 	}
 
 	@Override
@@ -117,15 +122,15 @@ public class RepeatBrick extends FormulaBrick implements LoopBeginBrick, OnClick
 		TextView times = (TextView) view.findViewById(R.id.brick_repeat_time_text_view);
 
 		if (getFormulaWithBrickField(BrickField.TIMES_TO_REPEAT).isSingleNumberFormula()) {
-            try{
+			try {
 				times.setText(view.getResources().getQuantityString(
 						R.plurals.time_plural,
 						Utils.convertDoubleToPluralInteger(getFormulaWithBrickField(BrickField.TIMES_TO_REPEAT)
 								.interpretDouble(ProjectManager.getInstance().getCurrentSprite()))
 				));
-            }catch(InterpretationException interpretationException){
-                Log.d(getClass().getSimpleName(), "Couldn't interpret Formula", interpretationException);
-            }
+			} catch (InterpretationException interpretationException) {
+				Log.d(getClass().getSimpleName(), "Couldn't interpret Formula", interpretationException);
+			}
 		} else {
 
 			// Random Number to get into the "other" keyword for values like 0.99 or 2.001 seconds or degrees
@@ -146,9 +151,9 @@ public class RepeatBrick extends FormulaBrick implements LoopBeginBrick, OnClick
 		prototypeView = View.inflate(context, R.layout.brick_repeat, null);
 		TextView textRepeat = (TextView) prototypeView.findViewById(R.id.brick_repeat_prototype_text_view);
 		TextView times = (TextView) prototypeView.findViewById(R.id.brick_repeat_time_text_view);
-        textRepeat.setText(String.valueOf(BrickValues.REPEAT));
-        times.setText(context.getResources().getQuantityString(R.plurals.time_plural,
-                    Utils.convertDoubleToPluralInteger(BrickValues.REPEAT)));
+		textRepeat.setText(String.valueOf(BrickValues.REPEAT));
+		times.setText(context.getResources().getQuantityString(R.plurals.time_plural,
+				Utils.convertDoubleToPluralInteger(BrickValues.REPEAT)));
 		return prototypeView;
 	}
 
@@ -169,19 +174,10 @@ public class RepeatBrick extends FormulaBrick implements LoopBeginBrick, OnClick
 			editRepeat.setTextColor(editRepeat.getTextColors().withAlpha(alphaValue));
 			editRepeat.getBackground().setAlpha(alphaValue);
 
-			this.alphaValue = (alphaValue);
-
+			this.alphaValue = alphaValue;
 		}
 
 		return view;
-	}
-
-	@Override
-	public void onClick(View view) {
-		if (checkbox.getVisibility() == View.VISIBLE) {
-			return;
-		}
-		FormulaEditorFragment.showFragment(view, this, getFormulaWithBrickField(BrickField.TIMES_TO_REPEAT));
 	}
 
 	@Override

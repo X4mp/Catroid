@@ -1,6 +1,6 @@
 /*
  * Catroid: An on-device visual programming system for Android devices
- * Copyright (C) 2010-2014 The Catrobat Team
+ * Copyright (C) 2010-2015 The Catrobat Team
  * (<http://developer.catrobat.org/credits>)
  *
  * This program is free software: you can redistribute it and/or modify
@@ -62,7 +62,6 @@ public class PlaySoundBrick extends BrickBaseType implements OnItemSelectedListe
 	private transient AdapterView<?> adapterView;
 
 	public PlaySoundBrick() {
-
 	}
 
 	@Override
@@ -146,8 +145,7 @@ public class PlaySoundBrick extends BrickBaseType implements OnItemSelectedListe
 				((TextView) adapterView.getChildAt(0)).setTextColor(color);
 			}
 
-			this.alphaValue = (alphaValue);
-
+			this.alphaValue = alphaValue;
 		}
 
 		return view;
@@ -172,6 +170,8 @@ public class PlaySoundBrick extends BrickBaseType implements OnItemSelectedListe
 		Spinner playSoundSpinner = (Spinner) prototypeView.findViewById(R.id.playsound_spinner);
 		playSoundSpinner.setFocusableInTouchMode(false);
 		playSoundSpinner.setFocusable(false);
+		playSoundSpinner.setEnabled(false);
+
 		SpinnerAdapter playSoundSpinnerAdapter = createSoundAdapter(context);
 		playSoundSpinner.setAdapter(playSoundSpinnerAdapter);
 		setSpinnerSelection(playSoundSpinner);

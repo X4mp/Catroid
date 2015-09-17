@@ -1,6 +1,6 @@
 /*
  * Catroid: An on-device visual programming system for Android devices
- * Copyright (C) 2010-2014 The Catrobat Team
+ * Copyright (C) 2010-2015 The Catrobat Team
  * (<http://developer.catrobat.org/credits>)
  *
  * This program is free software: you can redistribute it and/or modify
@@ -33,7 +33,9 @@ import org.catrobat.catroid.common.MessageContainer;
 import org.catrobat.catroid.common.ScreenModes;
 import org.catrobat.catroid.common.ScreenValues;
 import org.catrobat.catroid.content.bricks.Brick;
-import org.catrobat.catroid.formulaeditor.UserVariablesContainer;
+import org.catrobat.catroid.devices.mindstorms.nxt.sensors.NXTSensor;
+import org.catrobat.catroid.formulaeditor.DataContainer;
+import org.catrobat.catroid.ui.SettingsActivity;
 import org.catrobat.catroid.utils.Utils;
 
 import java.io.File;
@@ -50,14 +52,20 @@ public class Project implements Serializable {
 	private XmlHeader xmlHeader = new XmlHeader();
 	@XStreamAlias("objectList")
 	private List<Sprite> spriteList = new ArrayList<Sprite>();
-	@XStreamAlias("variables")
-	private UserVariablesContainer userVariables = null;
+	@XStreamAlias("data")
+	private DataContainer dataContainer = null;
+	@XStreamAlias("settings")
+	private List<Setting> settings = new ArrayList<Setting>();
 
-	public Project(Context context, String name) {
+	public Project(Context context, String name, boolean landscape) {
 		xmlHeader.setProgramName(name);
 		xmlHeader.setDescription("");
 
-		ifLandscapeSwitchWidthAndHeight();
+		if (landscape) {
+			ifPortraitSwitchWidthAndHeight();
+		} else {
+			ifLandscapeSwitchWidthAndHeight();
+		}
 		if (ScreenValues.SCREEN_HEIGHT == 0 || ScreenValues.SCREEN_WIDTH == 0) {
 			Utils.updateScreenWidthAndHeight(context);
 		}
@@ -67,7 +75,7 @@ public class Project implements Serializable {
 
 		MessageContainer.clear();
 
-		userVariables = new UserVariablesContainer();
+		dataContainer = new DataContainer();
 
 		if (context == null) {
 			return;
@@ -78,13 +86,24 @@ public class Project implements Serializable {
 		addSprite(background);
 	}
 
+	public Project(Context context, String name) {
+		this(context, name, false);
+	}
+
 	private void ifLandscapeSwitchWidthAndHeight() {
 		if (ScreenValues.SCREEN_WIDTH > ScreenValues.SCREEN_HEIGHT) {
 			int tmp = ScreenValues.SCREEN_HEIGHT;
 			ScreenValues.SCREEN_HEIGHT = ScreenValues.SCREEN_WIDTH;
 			ScreenValues.SCREEN_WIDTH = tmp;
 		}
+	}
 
+	private void ifPortraitSwitchWidthAndHeight() {
+		if (ScreenValues.SCREEN_WIDTH < ScreenValues.SCREEN_HEIGHT) {
+			int tmp = ScreenValues.SCREEN_HEIGHT;
+			ScreenValues.SCREEN_HEIGHT = ScreenValues.SCREEN_WIDTH;
+			ScreenValues.SCREEN_WIDTH = tmp;
+		}
 	}
 
 	public synchronized void addSprite(Sprite sprite) {
@@ -92,12 +111,10 @@ public class Project implements Serializable {
 			return;
 		}
 		spriteList.add(sprite);
-
 	}
 
 	public synchronized boolean removeSprite(Sprite sprite) {
 		return spriteList.remove(sprite);
-
 	}
 
 	public List<Sprite> getSpriteList() {
@@ -136,6 +153,15 @@ public class Project implements Serializable {
 		return this.xmlHeader;
 	}
 
+	public int getRequiredResources() {
+		int resources = Brick.NO_RESOURCES;
+
+		for (Sprite sprite : spriteList) {
+			resources |= sprite.getRequiredResources();
+		}
+		return resources;
+	}
+
 	// this method should be removed by the nex refactoring
 	// (used only in tests)
 	public void setCatrobatLanguageVersion(float catrobatLanguageVersion) {
@@ -145,7 +171,7 @@ public class Project implements Serializable {
 	public void setDeviceData(Context context) {
 		// TODO add other header values
 		xmlHeader.setPlatform(Constants.PLATFORM_NAME);
-		xmlHeader.setPlatformVersion(Build.VERSION.SDK_INT);
+		xmlHeader.setPlatformVersion((double) Build.VERSION.SDK_INT);
 		xmlHeader.setDeviceName(Build.MODEL);
 
 		xmlHeader.setCatrobatLanguageVersion(Constants.CURRENT_CATROBAT_LANGUAGE_VERSION);
@@ -165,8 +191,12 @@ public class Project implements Serializable {
 	public Project() {
 	}
 
-	public UserVariablesContainer getUserVariables() {
-		return userVariables;
+	public DataContainer getDataContainer() {
+		return dataContainer;
+	}
+
+	public List<Setting> getSettings() {
+		return settings;
 	}
 
 	public void removeUnusedBroadcastMessages() {
@@ -204,5 +234,59 @@ public class Project implements Serializable {
 			return false;
 		}
 		return true;
+	}
+
+	public void setXmlHeader(XmlHeader xmlHeader) {
+		this.xmlHeader = xmlHeader;
+	}
+
+	public void saveLegoNXTSettingsToProject(Context context) {
+		if (context == null) {
+			return;
+		}
+
+		if ((getRequiredResources() & Brick.BLUETOOTH_LEGO_NXT) == 0) {
+			for (Object setting : settings.toArray()) {
+				if (setting instanceof LegoNXTSetting) {
+					settings.remove(setting);
+					return;
+				}
+			}
+			return;
+		}
+
+		NXTSensor.Sensor[] sensorMapping = SettingsActivity.getLegoMindstormsNXTSensorMapping(context);
+		for (Setting setting : settings) {
+			if (setting instanceof LegoNXTSetting) {
+				((LegoNXTSetting) setting).updateMapping(sensorMapping);
+				return;
+			}
+		}
+
+		Setting mapping = new LegoNXTSetting(sensorMapping);
+		settings.add(mapping);
+	}
+
+	public void loadLegoNXTSettingsFromProject(Context context) {
+
+		if (context == null) {
+			return;
+		}
+
+		for (Setting setting : settings) {
+			if (setting instanceof LegoNXTSetting) {
+				SettingsActivity.enableLegoMindstormsNXTBricks(context);
+				SettingsActivity.setLegoMindstormsNXTSensorMapping(context, ((LegoNXTSetting) setting).getSensorMapping());
+				return;
+			}
+		}
+	}
+
+	public boolean checkIfPhiroProProject() {
+		return xmlHeader.isPhiroProProject();
+	}
+
+	public void setIsPhiroProProject(boolean isPhiroProProject) {
+		xmlHeader.setPhiroProProject(isPhiroProProject);
 	}
 }

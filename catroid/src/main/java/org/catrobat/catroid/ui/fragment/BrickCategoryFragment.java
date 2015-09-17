@@ -1,6 +1,6 @@
 /*
  * Catroid: An on-device visual programming system for Android devices
- * Copyright (C) 2010-2014 The Catrobat Team
+ * Copyright (C) 2010-2015 The Catrobat Team
  * (<http://developer.catrobat.org/credits>)
  *
  * This program is free software: you can redistribute it and/or modify
@@ -22,9 +22,7 @@
  */
 package org.catrobat.catroid.ui.fragment;
 
-import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.preference.PreferenceManager;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -36,10 +34,12 @@ import com.actionbarsherlock.app.SherlockListFragment;
 import com.actionbarsherlock.view.Menu;
 import com.actionbarsherlock.view.MenuInflater;
 
+import org.catrobat.catroid.BuildConfig;
 import org.catrobat.catroid.R;
 import org.catrobat.catroid.ui.BottomBar;
 import org.catrobat.catroid.ui.SettingsActivity;
 import org.catrobat.catroid.ui.ViewSwitchLock;
+import org.catrobat.catroid.ui.adapter.BrickAdapter;
 import org.catrobat.catroid.ui.adapter.BrickCategoryAdapter;
 
 import java.util.ArrayList;
@@ -51,13 +51,18 @@ public class BrickCategoryFragment extends SherlockListFragment {
 	public static final String BRICK_CATEGORY_FRAGMENT_TAG = "brick_category_fragment";
 
 	private CharSequence previousActionBarTitle;
-	private OnCategorySelectedListener onCategorySelectedListener;
-	BrickCategoryAdapter adapter;
+	private OnCategorySelectedListener scriptFragment;
+	private BrickCategoryAdapter adapter;
+	private BrickAdapter brickAdapter;
 
 	private Lock viewSwitchLock = new ViewSwitchLock();
 
 	public void setOnCategorySelectedListener(OnCategorySelectedListener listener) {
-		onCategorySelectedListener = listener;
+		scriptFragment = listener;
+	}
+
+	public void setBrickAdapter(BrickAdapter brickAdapter) {
+		this.brickAdapter = brickAdapter;
 	}
 
 	@Override
@@ -88,8 +93,8 @@ public class BrickCategoryFragment extends SherlockListFragment {
 					return;
 				}
 
-				if (onCategorySelectedListener != null) {
-					onCategorySelectedListener.onCategorySelected(adapter.getItem(position));
+				if (scriptFragment != null) {
+					scriptFragment.onCategorySelected(adapter.getItem(position));
 				}
 			}
 		});
@@ -98,13 +103,20 @@ public class BrickCategoryFragment extends SherlockListFragment {
 	@Override
 	public void onResume() {
 		super.onResume();
+		BottomBar.hideBottomBar(getSherlockActivity());
 		setupBrickCategories();
+	}
+
+	@Override
+	public void onPause() {
+		super.onPause();
+		BottomBar.showBottomBar(getSherlockActivity());
+		BottomBar.showPlayButton(getSherlockActivity());
 	}
 
 	@Override
 	public void onDestroy() {
 		resetActionBar();
-		BottomBar.showBottomBar(getSherlockActivity());
 		super.onDestroy();
 	}
 
@@ -136,15 +148,22 @@ public class BrickCategoryFragment extends SherlockListFragment {
 		categories.add(inflater.inflate(R.layout.brick_category_motion, null));
 		categories.add(inflater.inflate(R.layout.brick_category_sound, null));
 		categories.add(inflater.inflate(R.layout.brick_category_looks, null));
-		categories.add(inflater.inflate(R.layout.brick_category_uservariables, null));
+		categories.add(inflater.inflate(R.layout.brick_category_data, null));
 
-		SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getActivity());
-		if (sharedPreferences.getBoolean("setting_mindstorm_bricks", false)) {
+		if (SettingsActivity.isMindstormsNXTSharedPreferenceEnabled(getActivity())) {
 			categories.add(inflater.inflate(R.layout.brick_category_lego_nxt, null));
+		}
+
+		if (BuildConfig.FEATURE_USERBRICKS_ENABLED && brickAdapter.getUserBrick() == null) {
+			categories.add(inflater.inflate(R.layout.brick_category_userbricks, null));
 		}
 
 		if (SettingsActivity.isDroneSharedPreferenceEnabled(getActivity(), false)) {
 			categories.add(inflater.inflate(R.layout.brick_category_drone, null));
+		}
+
+		if (SettingsActivity.isPhiroSharedPreferenceEnabled(getActivity())) {
+			categories.add(inflater.inflate(R.layout.brick_category_phiro, null));
 		}
 
 		adapter = new BrickCategoryAdapter(categories);
@@ -154,6 +173,5 @@ public class BrickCategoryFragment extends SherlockListFragment {
 	public interface OnCategorySelectedListener {
 
 		void onCategorySelected(String category);
-
 	}
 }

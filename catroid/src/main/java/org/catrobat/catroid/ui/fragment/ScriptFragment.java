@@ -1,6 +1,6 @@
 /*
  * Catroid: An on-device visual programming system for Android devices
- * Copyright (C) 2010-2014 The Catrobat Team
+ * Copyright (C) 2010-2015 The Catrobat Team
  * (<http://developer.catrobat.org/credits>)
  *
  * This program is free software: you can redistribute it and/or modify
@@ -40,7 +40,6 @@ import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.ViewGroup;
 import android.widget.ListView;
-import android.widget.Toast;
 
 import com.actionbarsherlock.view.ActionMode;
 import com.actionbarsherlock.view.Menu;
@@ -54,8 +53,14 @@ import org.catrobat.catroid.content.Sprite;
 import org.catrobat.catroid.content.bricks.AllowedAfterDeadEndBrick;
 import org.catrobat.catroid.content.bricks.Brick;
 import org.catrobat.catroid.content.bricks.DeadEndBrick;
+import org.catrobat.catroid.content.bricks.FormulaBrick;
 import org.catrobat.catroid.content.bricks.NestingBrick;
 import org.catrobat.catroid.content.bricks.ScriptBrick;
+import org.catrobat.catroid.content.bricks.UserBrick;
+import org.catrobat.catroid.content.commands.ChangeFormulaCommand;
+import org.catrobat.catroid.content.commands.CommandFactory;
+import org.catrobat.catroid.content.commands.OnFormulaChangedListener;
+import org.catrobat.catroid.formulaeditor.Formula;
 import org.catrobat.catroid.ui.BottomBar;
 import org.catrobat.catroid.ui.ScriptActivity;
 import org.catrobat.catroid.ui.ViewSwitchLock;
@@ -65,13 +70,14 @@ import org.catrobat.catroid.ui.dialogs.CustomAlertDialogBuilder;
 import org.catrobat.catroid.ui.dialogs.DeleteLookDialog;
 import org.catrobat.catroid.ui.dragndrop.DragAndDropListView;
 import org.catrobat.catroid.ui.fragment.BrickCategoryFragment.OnCategorySelectedListener;
+import org.catrobat.catroid.utils.ToastUtil;
 import org.catrobat.catroid.utils.Utils;
 
 import java.util.List;
 import java.util.concurrent.locks.Lock;
 
 public class ScriptFragment extends ScriptActivityFragment implements OnCategorySelectedListener,
-		OnBrickCheckedListener {
+		OnBrickCheckedListener, OnFormulaChangedListener {
 
 	public static final String TAG = ScriptFragment.class.getSimpleName();
 
@@ -137,6 +143,7 @@ public class ScriptFragment extends ScriptActivityFragment implements OnCategory
 	@Override
 	public void onStart() {
 		super.onStart();
+		BottomBar.showBottomBar(getActivity());
 		initListeners();
 	}
 
@@ -155,7 +162,11 @@ public class ScriptFragment extends ScriptActivityFragment implements OnCategory
 		IntentFilter filterBrickListChanged = new IntentFilter(ScriptActivity.ACTION_BRICK_LIST_CHANGED);
 		getActivity().registerReceiver(brickListChangedReceiver, filterBrickListChanged);
 
+		BottomBar.showBottomBar(getActivity());
+		BottomBar.showPlayButton(getActivity());
+		BottomBar.showAddButton(getActivity());
 		initListeners();
+		adapter.resetAlphas();
 	}
 
 	@Override
@@ -167,7 +178,7 @@ public class ScriptFragment extends ScriptActivityFragment implements OnCategory
 			getActivity().unregisterReceiver(brickListChangedReceiver);
 		}
 		if (projectManager.getCurrentProject() != null) {
-			projectManager.saveProject();
+			projectManager.saveProject(getActivity().getApplicationContext());
 			projectManager.getCurrentProject().removeUnusedBroadcastMessages(); // TODO: Find better place
 		}
 	}
@@ -198,8 +209,14 @@ public class ScriptFragment extends ScriptActivityFragment implements OnCategory
 		int lastVisibleBrick = listView.getLastVisiblePosition();
 		int position = ((1 + lastVisibleBrick - firstVisibleBrick) / 2);
 		position += firstVisibleBrick;
-		adapter.addNewBrick(position, brickToBeAdded, true);
-		adapter.notifyDataSetChanged();
+
+		//TODO: allow recursive userbricks if its possible
+		if (adapter.getUserBrick() != null && brickToBeAdded instanceof UserBrick) { // && ((UserBrick) brickToBeAdded).getDefinitionBrick().equals(ProjectManager.getInstance().getCurrentUserBrick().getDefinitionBrick())) {
+			ToastUtil.showError(getActivity().getApplicationContext(), R.string.recursive_user_brick_forbidden);
+		} else {
+			adapter.addNewBrick(position, brickToBeAdded, true);
+			adapter.notifyDataSetChanged();
+		}
 	}
 
 	private void initListeners() {
@@ -218,9 +235,11 @@ public class ScriptFragment extends ScriptActivityFragment implements OnCategory
 
 		adapter = new BrickAdapter(getActivity(), sprite, listView);
 		adapter.setOnBrickCheckedListener(this);
+		ScriptActivity activity = (ScriptActivity) getActivity();
+		activity.setupBrickAdapter(adapter);
 
 		if (ProjectManager.getInstance().getCurrentSprite().getNumberOfScripts() > 0) {
-			ProjectManager.getInstance().setCurrentScript(((ScriptBrick) adapter.getItem(0)).initScript());
+			ProjectManager.getInstance().setCurrentScript(((ScriptBrick) adapter.getItem(0)).getScriptSafe());
 		}
 
 		listView.setOnCreateContextMenuListener(this);
@@ -231,6 +250,7 @@ public class ScriptFragment extends ScriptActivityFragment implements OnCategory
 
 	private void showCategoryFragment() {
 		BrickCategoryFragment brickCategoryFragment = new BrickCategoryFragment();
+		brickCategoryFragment.setBrickAdapter(adapter);
 		brickCategoryFragment.setOnCategorySelectedListener(this);
 		FragmentManager fragmentManager = getActivity().getSupportFragmentManager();
 		FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
@@ -295,6 +315,12 @@ public class ScriptFragment extends ScriptActivityFragment implements OnCategory
 			return;
 		}
 
+		// addButtonHandler != null when the user brick category is open in the AddBrickFragment
+		if (AddBrickFragment.addButtonHandler != null) {
+			AddBrickFragment.addButtonHandler.handleAddButton();
+			return;
+		}
+
 		if (listView.isCurrentlyDragging()) {
 			listView.animateHoveringBrick();
 			return;
@@ -324,6 +350,14 @@ public class ScriptFragment extends ScriptActivityFragment implements OnCategory
 
 		DeleteLookDialog deleteLookDialog = DeleteLookDialog.newInstance(selectedBrickPosition);
 		deleteLookDialog.show(getFragmentManager(), DeleteLookDialog.DIALOG_FRAGMENT_TAG);
+	}
+
+	@Override
+	public void onFormulaChanged(FormulaBrick formulaBrick, Brick.BrickField brickField, Formula newFormula) {
+		ChangeFormulaCommand changeFormulaCommand = CommandFactory.makeChangeFormulaCommand(formulaBrick, brickField,
+				newFormula);
+		changeFormulaCommand.execute();
+		adapter.notifyDataSetChanged();
 	}
 
 	private class BrickListChangedReceiver extends BroadcastReceiver {
@@ -425,9 +459,9 @@ public class ScriptFragment extends ScriptActivityFragment implements OnCategory
 		}
 
 		if (brick instanceof ScriptBrick) {
-			scriptToEdit = ((ScriptBrick) brick).initScript();
+			scriptToEdit = ((ScriptBrick) brick).getScriptSafe();
 
-			Script clonedScript = scriptToEdit.copyScriptForSprite(sprite);
+			Script clonedScript = scriptToEdit.copyScriptForSprite(sprite, sprite.getUserBrickList());
 
 			sprite.addScript(clonedScript);
 			adapter.initBrickList();
@@ -446,8 +480,12 @@ public class ScriptFragment extends ScriptActivityFragment implements OnCategory
 		try {
 			Brick copiedBrick = brick.clone();
 
-			Script scriptList = ProjectManager.getInstance().getCurrentScript();
-
+			Script scriptList = null;
+			if (adapter.getUserBrick() != null) {
+				scriptList = ProjectManager.getInstance().getCurrentUserBrick().getDefinitionBrick().getUserScript();
+			} else {
+				scriptList = ProjectManager.getInstance().getCurrentScript();
+			}
 			if (brick instanceof NestingBrick) {
 				NestingBrick nestingBrickCopy = (NestingBrick) copiedBrick;
 				nestingBrickCopy.initialize();
@@ -462,18 +500,18 @@ public class ScriptFragment extends ScriptActivityFragment implements OnCategory
 			adapter.addNewBrick(newPosition, copiedBrick, false);
 			adapter.initBrickList();
 
-			ProjectManager.getInstance().saveProject();
+			ProjectManager.getInstance().saveProject(getActivity().getApplicationContext());
 			adapter.notifyDataSetChanged();
 		} catch (CloneNotSupportedException exception) {
 			Log.e(getTag(), "Copying a Brick failed", exception);
-			Toast.makeText(getActivity(), R.string.error_copying_brick, Toast.LENGTH_SHORT).show();
+			ToastUtil.showError(getActivity(), R.string.error_copying_brick);
 		}
 	}
 
 	private void deleteBrick(Brick brick) {
 
 		if (brick instanceof ScriptBrick) {
-			scriptToEdit = ((ScriptBrick) brick).initScript();
+			scriptToEdit = ((ScriptBrick) brick).getScriptSafe();
 			adapter.handleScriptDelete(sprite, scriptToEdit);
 			return;
 		}
@@ -520,7 +558,6 @@ public class ScriptFragment extends ScriptActivityFragment implements OnCategory
 			@Override
 			public void onClick(DialogInterface dialog, int id) {
 				dialog.cancel();
-
 			}
 		});
 
@@ -584,7 +621,5 @@ public class ScriptFragment extends ScriptActivityFragment implements OnCategory
 
 	@Override
 	public void startBackPackActionMode() {
-
 	}
-
 }

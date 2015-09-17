@@ -1,6 +1,6 @@
 /*
  * Catroid: An on-device visual programming system for Android devices
- * Copyright (C) 2010-2014 The Catrobat Team
+ * Copyright (C) 2010-2015 The Catrobat Team
  * (<http://developer.catrobat.org/credits>)
  *
  * This program is free software: you can redistribute it and/or modify
@@ -37,14 +37,12 @@ public class SetYAction extends TemporalAction {
 
 	@Override
 	protected void update(float delta) {
-		Float newY;
 		try {
-			newY = yPosition == null ? Float.valueOf(0f) : yPosition.interpretFloat(sprite);
-        } catch (InterpretationException interpretationException) {
-            Log.d(getClass().getSimpleName(), "Formula interpretation for this specific Brick failed.", interpretationException);
-            return;
-        }
-		sprite.look.setYInUserInterfaceDimensionUnit(newY);
+			Float newY = yPosition == null ? Float.valueOf(0f) : yPosition.interpretFloat(sprite);
+			sprite.look.setYInUserInterfaceDimensionUnit(newY);
+		} catch (InterpretationException interpretationException) {
+			Log.d(getClass().getSimpleName(), "Formula interpretation for this specific Brick failed.", interpretationException);
+		}
 	}
 
 	public void setSprite(Sprite sprite) {
@@ -54,5 +52,4 @@ public class SetYAction extends TemporalAction {
 	public void setY(Formula y) {
 		this.yPosition = y;
 	}
-
 }

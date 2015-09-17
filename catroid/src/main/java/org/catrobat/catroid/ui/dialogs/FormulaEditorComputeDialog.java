@@ -1,6 +1,6 @@
 /*
  * Catroid: An on-device visual programming system for Android devices
- * Copyright (C) 2010-2014 The Catrobat Team
+ * Copyright (C) 2010-2015 The Catrobat Team
  * (<http://developer.catrobat.org/credits>)
  *
  * This program is free software: you can redistribute it and/or modify
@@ -28,9 +28,15 @@ import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.os.Bundle;
+import android.view.MotionEvent;
 import android.widget.TextView;
 
+import org.catrobat.catroid.ProjectManager;
 import org.catrobat.catroid.R;
+import org.catrobat.catroid.bluetooth.base.BluetoothDevice;
+import org.catrobat.catroid.bluetooth.base.BluetoothDeviceService;
+import org.catrobat.catroid.common.CatroidService;
+import org.catrobat.catroid.common.ServiceProvider;
 import org.catrobat.catroid.content.bricks.Brick;
 import org.catrobat.catroid.facedetection.FaceDetectionHandler;
 import org.catrobat.catroid.formulaeditor.Formula;
@@ -51,9 +57,13 @@ public class FormulaEditorComputeDialog extends AlertDialog implements SensorEve
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		setContentView(R.layout.dialog_formulaeditor_compute);
-		setCanceledOnTouchOutside(true);
-		computeTextView = (TextView) findViewById(R.id.formula_editor_compute_dialog_textview);
+		if (ProjectManager.getInstance().isCurrentProjectLandscape()) {
+			setContentView(R.layout.dialog_formulaeditor_compute_landscape);
+			computeTextView = (TextView) findViewById(R.id.formula_editor_compute_dialog_textview_landscape);
+		} else {
+			setContentView(R.layout.dialog_formulaeditor_compute);
+			computeTextView = (TextView) findViewById(R.id.formula_editor_compute_dialog_textview);
+		}
 		showFormulaResult();
 	}
 
@@ -68,13 +78,27 @@ public class FormulaEditorComputeDialog extends AlertDialog implements SensorEve
 		if ((resources & Brick.FACE_DETECTION) > 0) {
 			FaceDetectionHandler.startFaceDetection(getContext());
 		}
+
+		if ((resources & Brick.BLUETOOTH_LEGO_NXT) > 0) {
+			BluetoothDeviceService btService = ServiceProvider.getService(CatroidService.BLUETOOTH_DEVICE_SERVICE);
+			btService.connectDevice(BluetoothDevice.LEGO_NXT, this.getContext());
+		}
 	}
 
 	@Override
 	protected void onStop() {
 		SensorHandler.unregisterListener(this);
+
+		ServiceProvider.getService(CatroidService.BLUETOOTH_DEVICE_SERVICE).pause();
+
 		FaceDetectionHandler.stopFaceDetection();
 		super.onStop();
+	}
+
+	@Override
+	public boolean onTouchEvent(MotionEvent event) {
+		dismiss();
+		return true;
 	}
 
 	private void showFormulaResult() {
@@ -84,24 +108,15 @@ public class FormulaEditorComputeDialog extends AlertDialog implements SensorEve
 
 		String result = formulaToCompute.getResultForComputeDialog(context);
 		setDialogTextView(result);
-
 	}
 
 	@Override
 	public void onAccuracyChanged(Sensor sensor, int accuracy) {
-
 	}
 
 	@Override
 	public void onSensorChanged(SensorEvent event) {
-		switch (event.sensor.getType()) {
-			case Sensor.TYPE_LINEAR_ACCELERATION:
-				showFormulaResult();
-				break;
-			case Sensor.TYPE_ROTATION_VECTOR:
-				showFormulaResult();
-				break;
-		}
+		showFormulaResult();
 	}
 
 	private void setDialogTextView(final String newString) {

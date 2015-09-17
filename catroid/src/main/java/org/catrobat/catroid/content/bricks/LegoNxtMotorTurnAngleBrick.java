@@ -1,6 +1,6 @@
 /*
  * Catroid: An on-device visual programming system for Android devices
- * Copyright (C) 2010-2014 The Catrobat Team
+ * Copyright (C) 2010-2015 The Catrobat Team
  * (<http://developer.catrobat.org/credits>)
  *
  * This program is free software: you can redistribute it and/or modify
@@ -25,8 +25,8 @@ package org.catrobat.catroid.content.bricks;
 import android.content.Context;
 import android.content.res.ColorStateList;
 import android.graphics.drawable.Drawable;
+import android.view.Gravity;
 import android.view.View;
-import android.view.View.OnClickListener;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemSelectedListener;
 import android.widget.ArrayAdapter;
@@ -39,9 +39,7 @@ import android.widget.TextView;
 import com.badlogic.gdx.scenes.scene2d.actions.SequenceAction;
 
 import org.catrobat.catroid.R;
-
 import org.catrobat.catroid.common.BrickValues;
-
 import org.catrobat.catroid.content.Sprite;
 import org.catrobat.catroid.content.actions.ExtendedActions;
 import org.catrobat.catroid.formulaeditor.Formula;
@@ -49,7 +47,7 @@ import org.catrobat.catroid.ui.fragment.FormulaEditorFragment;
 
 import java.util.List;
 
-public class LegoNxtMotorTurnAngleBrick extends FormulaBrick implements OnClickListener {
+public class LegoNxtMotorTurnAngleBrick extends FormulaBrick {
 	private static final long serialVersionUID = 1L;
 
 	private transient View prototypeView;
@@ -59,7 +57,7 @@ public class LegoNxtMotorTurnAngleBrick extends FormulaBrick implements OnClickL
 	private transient AdapterView<?> adapterView;
 
 	public static enum Motor {
-		MOTOR_A, MOTOR_B, MOTOR_C, MOTOR_A_C
+		MOTOR_A, MOTOR_B, MOTOR_C, MOTOR_B_C
 	}
 
 	public LegoNxtMotorTurnAngleBrick() {
@@ -104,6 +102,7 @@ public class LegoNxtMotorTurnAngleBrick extends FormulaBrick implements OnClickL
 		Spinner legoSpinner = (Spinner) prototypeView.findViewById(R.id.lego_motor_turn_angle_spinner);
 		legoSpinner.setFocusableInTouchMode(false);
 		legoSpinner.setFocusable(false);
+		legoSpinner.setEnabled(false);
 
 		ArrayAdapter<CharSequence> motorAdapter = ArrayAdapter.createFromResource(context, R.array.nxt_motor_chooser,
 				android.R.layout.simple_spinner_item);
@@ -111,6 +110,7 @@ public class LegoNxtMotorTurnAngleBrick extends FormulaBrick implements OnClickL
 
 		legoSpinner.setAdapter(motorAdapter);
 		legoSpinner.setSelection(motorEnum.ordinal());
+		legoSpinner.setGravity(Gravity.CENTER);
 		return prototypeView;
 	}
 
@@ -118,6 +118,11 @@ public class LegoNxtMotorTurnAngleBrick extends FormulaBrick implements OnClickL
 	public Brick clone() {
 		return new LegoNxtMotorTurnAngleBrick(motorEnum,
 				getFormulaWithBrickField(BrickField.LEGO_NXT_DEGREES).clone());
+	}
+
+	@Override
+	public void showFormulaEditorToEditFormula(View view) {
+		FormulaEditorFragment.showFragment(view, this, BrickField.LEGO_NXT_DEGREES);
 	}
 
 	@Override
@@ -178,20 +183,12 @@ public class LegoNxtMotorTurnAngleBrick extends FormulaBrick implements OnClickL
 			@Override
 			public void onNothingSelected(AdapterView<?> arg0) {
 			}
-
 		});
 
 		motorSpinner.setSelection(motorEnum.ordinal());
+		motorSpinner.setGravity(Gravity.CENTER);
 
 		return view;
-	}
-
-	@Override
-	public void onClick(View view) {
-		if (checkbox.getVisibility() == View.VISIBLE) {
-			return;
-		}
-		FormulaEditorFragment.showFragment(view, this, getFormulaWithBrickField(BrickField.LEGO_NXT_DEGREES));
 	}
 
 	@Override
@@ -222,8 +219,7 @@ public class LegoNxtMotorTurnAngleBrick extends FormulaBrick implements OnClickL
 			editLegoSpeed.setTextColor(editLegoSpeed.getTextColors().withAlpha(alphaValue));
 			editLegoSpeed.getBackground().setAlpha(alphaValue);
 
-			this.alphaValue = (alphaValue);
-
+			this.alphaValue = alphaValue;
 		}
 
 		return view;
@@ -235,5 +231,4 @@ public class LegoNxtMotorTurnAngleBrick extends FormulaBrick implements OnClickL
 				getFormulaWithBrickField(BrickField.LEGO_NXT_DEGREES)));
 		return null;
 	}
-
 }

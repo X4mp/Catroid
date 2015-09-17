@@ -1,6 +1,6 @@
 /*
  * Catroid: An on-device visual programming system for Android devices
- * Copyright (C) 2010-2014 The Catrobat Team
+ * Copyright (C) 2010-2015 The Catrobat Team
  * (<http://developer.catrobat.org/credits>)
  *
  * This program is free software: you can redistribute it and/or modify
@@ -22,7 +22,6 @@
  */
 package org.catrobat.catroid.soundrecorder;
 
-
 import android.content.Context;
 import android.util.AttributeSet;
 import android.widget.ImageButton;
@@ -33,7 +32,6 @@ public class RecordButton extends ImageButton {
 	public RecordButton(Context context) {
 		super(context);
 	}
-
 
 	public RecordButton(Context context, AttributeSet attrs) {
 		super(context, attrs);

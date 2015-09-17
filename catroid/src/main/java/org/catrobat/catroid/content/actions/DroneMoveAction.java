@@ -1,6 +1,6 @@
 /*
  * Catroid: An on-device visual programming system for Android devices
- * Copyright (C) 2010-2014 The Catrobat Team
+ * Copyright (C) 2010-2015 The Catrobat Team
  * (<http://developer.catrobat.org/credits>)
  *
  * This program is free software: you can redistribute it and/or modify
@@ -42,15 +42,16 @@ public abstract class DroneMoveAction extends TemporalAction {
 
 	@Override
 	protected void begin() {
-        Float newDuration;
-        try {
-            newDuration = duration == null ? Float.valueOf(DRONE_MOVE_SPEED_STOP) : duration.interpretFloat(sprite);
-        } catch (InterpretationException interpretationException) {
-            Log.d(getClass().getSimpleName(), "Formula interpretation for this specific Brick failed.", interpretationException);
-            newDuration = Float.valueOf(DRONE_MOVE_SPEED_STOP);
-        }
-        super.setDuration(newDuration);
+		Float newDuration;
+		try {
+			newDuration = duration == null ? Float.valueOf(DRONE_MOVE_SPEED_STOP) : duration.interpretFloat(sprite);
+		} catch (InterpretationException interpretationException) {
+			Log.d(getClass().getSimpleName(), "Formula interpretation for this specific Brick failed.", interpretationException);
+			newDuration = Float.valueOf(DRONE_MOVE_SPEED_STOP);
+		}
+		super.setDuration(newDuration);
 	}
+
 	public void setDelay(Formula delay) {
 		this.duration = delay;
 	}
@@ -64,14 +65,14 @@ public abstract class DroneMoveAction extends TemporalAction {
 	}
 
 	protected float getPowerNormalized() {
-        Float normalizedPower;
-        try {
-            normalizedPower = duration == null ? Float.valueOf(DRONE_MOVE_SPEED_STOP) : powerInPercent.interpretFloat(sprite) / 100;
-        } catch (InterpretationException interpretationException) {
-            Log.d(getClass().getSimpleName(), "Formula interpretation for this specific Brick failed.", interpretationException);
-            normalizedPower = Float.valueOf(DRONE_MOVE_SPEED_STOP);
-        }
-        return normalizedPower;
+		Float normalizedPower;
+		try {
+			normalizedPower = duration == null ? Float.valueOf(DRONE_MOVE_SPEED_STOP) : powerInPercent.interpretFloat(sprite) / 100;
+		} catch (InterpretationException interpretationException) {
+			Log.d(getClass().getSimpleName(), "Formula interpretation for this specific Brick failed.", interpretationException);
+			normalizedPower = Float.valueOf(DRONE_MOVE_SPEED_STOP);
+		}
+		return normalizedPower;
 	}
 
 	protected DroneControlService getDroneService() {

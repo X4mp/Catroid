@@ -1,6 +1,6 @@
 /*
  * Catroid: An on-device visual programming system for Android devices
- * Copyright (C) 2010-2014 The Catrobat Team
+ * Copyright (C) 2010-2015 The Catrobat Team
  * (<http://developer.catrobat.org/credits>)
  *
  * This program is free software: you can redistribute it and/or modify
@@ -37,16 +37,14 @@ public class ChangeBrightnessByNAction extends TemporalAction {
 
 	@Override
 	protected void update(float percent) {
-		Float newChangeBrightness;
 		try {
-			newChangeBrightness = changeBrightness == null ? Float.valueOf(0f) : changeBrightness
+			Float newChangeBrightness = changeBrightness == null ? Float.valueOf(0f) : changeBrightness
 					.interpretFloat(sprite);
+			sprite.look.changeBrightnessInUserInterfaceDimensionUnit(newChangeBrightness);
 		} catch (InterpretationException interpretationException) {
-            Log.d(getClass().getSimpleName(),"Formula interpretation for this specific Brick failed." , interpretationException);
-            return;
-        }
-		sprite.look.changeBrightnessInUserInterfaceDimensionUnit(newChangeBrightness);
-    }
+			Log.d(getClass().getSimpleName(), "Formula interpretation for this specific Brick failed.", interpretationException);
+		}
+	}
 
 	public void setSprite(Sprite sprite) {
 		this.sprite = sprite;
@@ -55,5 +53,4 @@ public class ChangeBrightnessByNAction extends TemporalAction {
 	public void setBrightness(Formula changeBrightness) {
 		this.changeBrightness = changeBrightness;
 	}
-
 }

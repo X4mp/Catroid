@@ -1,6 +1,6 @@
 /*
  * Catroid: An on-device visual programming system for Android devices
- * Copyright (C) 2010-2014 The Catrobat Team
+ * Copyright (C) 2010-2015 The Catrobat Team
  * (<http://developer.catrobat.org/credits>)
  *
  * This program is free software: you can redistribute it and/or modify
@@ -31,11 +31,11 @@ import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Chronometer;
-import android.widget.Toast;
 
 import org.catrobat.catroid.R;
 import org.catrobat.catroid.common.Constants;
 import org.catrobat.catroid.ui.BaseActivity;
+import org.catrobat.catroid.utils.ToastUtil;
 import org.catrobat.catroid.utils.Utils;
 
 import java.io.IOException;
@@ -86,6 +86,9 @@ public class SoundRecorderActivity extends BaseActivity implements OnClickListen
 			return;
 		}
 		try {
+			if (soundRecorder != null) {
+				soundRecorder.stop();
+			}
 			String recordPath = Utils.buildPath(Constants.TMP_PATH, getString(R.string.soundrecorder_recorded_filename)
 					+ SoundRecorder.RECORDING_EXTENSION);
 			soundRecorder = new SoundRecorder(recordPath);
@@ -93,11 +96,15 @@ public class SoundRecorderActivity extends BaseActivity implements OnClickListen
 			setViewsToRecordingState();
 		} catch (IOException e) {
 			Log.e(TAG, "Error recording sound.", e);
-			Toast.makeText(this, R.string.soundrecorder_error, Toast.LENGTH_SHORT).show();
+			ToastUtil.showError(this, R.string.soundrecorder_error);
 		} catch (IllegalStateException e) {
 			// app would crash if other app uses mic, catch IllegalStateException and display Toast
 			Log.e(TAG, "Error recording sound (Other recorder running?).", e);
-			Toast.makeText(this, R.string.soundrecorder_error, Toast.LENGTH_SHORT).show();
+			ToastUtil.showError(this, R.string.soundrecorder_error);
+		} catch (RuntimeException e) {
+			// device does not support audio or video format
+			Log.e(TAG, "Device does not support audio or video format.", e);
+			ToastUtil.showError(this, R.string.soundrecorder_error);
 		}
 	}
 
@@ -117,7 +124,7 @@ public class SoundRecorderActivity extends BaseActivity implements OnClickListen
 			setResult(Activity.RESULT_OK, new Intent(Intent.ACTION_PICK, uri));
 		} catch (IOException e) {
 			Log.e("CATROID", "Error recording sound.", e);
-			Toast.makeText(this, R.string.soundrecorder_error, Toast.LENGTH_SHORT).show();
+			ToastUtil.showError(this, R.string.soundrecorder_error);
 			setResult(Activity.RESULT_CANCELED);
 		}
 	}
@@ -126,5 +133,4 @@ public class SoundRecorderActivity extends BaseActivity implements OnClickListen
 		recordButton.setState(RecordButton.RecordState.STOP);
 		recordButton.setImageResource(R.drawable.ic_microphone);
 	}
-
 }

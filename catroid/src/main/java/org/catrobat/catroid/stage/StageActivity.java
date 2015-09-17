@@ -1,6 +1,6 @@
 /*
  * Catroid: An on-device visual programming system for Android devices
- * Copyright (C) 2010-2014 The Catrobat Team
+ * Copyright (C) 2010-2015 The Catrobat Team
  * (<http://developer.catrobat.org/credits>)
  *
  * This program is free software: you can redistribute it and/or modify
@@ -26,18 +26,23 @@ import android.content.pm.ActivityInfo;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.WindowManager;
-import android.widget.Toast;
 
+import com.badlogic.gdx.ApplicationListener;
 import com.badlogic.gdx.backends.android.AndroidApplication;
+import com.badlogic.gdx.backends.android.AndroidApplicationConfiguration;
 
 import org.catrobat.catroid.ProjectManager;
 import org.catrobat.catroid.R;
+import org.catrobat.catroid.common.CatroidService;
 import org.catrobat.catroid.common.ScreenValues;
+import org.catrobat.catroid.common.ServiceProvider;
 import org.catrobat.catroid.drone.DroneInitializer;
+import org.catrobat.catroid.facedetection.FaceDetectionHandler;
 import org.catrobat.catroid.formulaeditor.SensorHandler;
 import org.catrobat.catroid.io.StageAudioFocus;
 import org.catrobat.catroid.ui.dialogs.StageDialog;
 import org.catrobat.catroid.utils.LedUtil;
+import org.catrobat.catroid.utils.ToastUtil;
 import org.catrobat.catroid.utils.VibratorUtil;
 
 public class StageActivity extends AndroidApplication {
@@ -52,11 +57,16 @@ public class StageActivity extends AndroidApplication {
 
 	private StageAudioFocus stageAudioFocus;
 
-
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+
+		if (ProjectManager.getInstance().isCurrentProjectLandscape()) {
+			setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
+		} else {
+			setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+		}
+
 		getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
 		if (getIntent().getBooleanExtra(DroneInitializer.INIT_DRONE_STRING_EXTRA, false)) {
@@ -66,16 +76,18 @@ public class StageActivity extends AndroidApplication {
 		stageDialog = new StageDialog(this, stageListener, R.style.stage_dialog);
 		calculateScreenSizes();
 
-		initialize(stageListener, true);
+		initialize(stageListener, new AndroidApplicationConfiguration());
 		if (droneConnection != null) {
 			try {
 				droneConnection.initialise();
 			} catch (RuntimeException runtimeException) {
 				Log.e(TAG, "Failure during drone service startup", runtimeException);
-				Toast.makeText(this, R.string.error_no_drone_connected, Toast.LENGTH_LONG).show();
+				ToastUtil.showError(this, R.string.error_no_drone_connected);
 				this.finish();
 			}
 		}
+
+		ServiceProvider.getService(CatroidService.BLUETOOTH_DEVICE_SERVICE).initialise();
 
 		stageAudioFocus = new StageAudioFocus(this);
 	}
@@ -105,6 +117,8 @@ public class StageActivity extends AndroidApplication {
 		if (droneConnection != null) {
 			droneConnection.pause();
 		}
+
+		ServiceProvider.getService(CatroidService.BLUETOOTH_DEVICE_SERVICE).pause();
 	}
 
 	@Override
@@ -119,6 +133,8 @@ public class StageActivity extends AndroidApplication {
 		if (droneConnection != null) {
 			droneConnection.start();
 		}
+
+		ServiceProvider.getService(CatroidService.BLUETOOTH_DEVICE_SERVICE).start();
 	}
 
 	public void pause() {
@@ -126,6 +142,9 @@ public class StageActivity extends AndroidApplication {
 		stageListener.menuPause();
 		LedUtil.pauseLed();
 		VibratorUtil.pauseVibrator();
+		FaceDetectionHandler.pauseFaceDetection();
+
+		ServiceProvider.getService(CatroidService.BLUETOOTH_DEVICE_SERVICE).pause();
 	}
 
 	public void resume() {
@@ -133,6 +152,9 @@ public class StageActivity extends AndroidApplication {
 		LedUtil.resumeLed();
 		VibratorUtil.resumeVibrator();
 		SensorHandler.startSensorListener(this);
+		FaceDetectionHandler.startFaceDetection(this);
+
+		ServiceProvider.getService(CatroidService.BLUETOOTH_DEVICE_SERVICE).start();
 	}
 
 	public boolean getResizePossible() {
@@ -140,9 +162,13 @@ public class StageActivity extends AndroidApplication {
 	}
 
 	private void calculateScreenSizes() {
-		ifLandscapeSwitchWidthAndHeight();
 		int virtualScreenWidth = ProjectManager.getInstance().getCurrentProject().getXmlHeader().virtualScreenWidth;
 		int virtualScreenHeight = ProjectManager.getInstance().getCurrentProject().getXmlHeader().virtualScreenHeight;
+		if (virtualScreenHeight > virtualScreenWidth) {
+			ifLandscapeSwitchWidthAndHeight();
+		} else {
+			ifPortraitSwitchWidthAndHeight();
+		}
 		float aspectRatio = (float) virtualScreenWidth / (float) virtualScreenHeight;
 		float screenAspectRatio = ScreenValues.getAspectRatio();
 
@@ -165,7 +191,6 @@ public class StageActivity extends AndroidApplication {
 			stageListener.maximizeViewPortWidth = (int) (ScreenValues.SCREEN_WIDTH * scale);
 			stageListener.maximizeViewPortX = (int) ((ScreenValues.SCREEN_WIDTH - stageListener.maximizeViewPortWidth) / 2f);
 			stageListener.maximizeViewPortHeight = ScreenValues.SCREEN_HEIGHT;
-
 		} else if (aspectRatio > screenAspectRatio) {
 			scale = ratioWidth / ratioHeight;
 			stageListener.maximizeViewPortHeight = (int) (ScreenValues.SCREEN_HEIGHT * scale);
@@ -182,15 +207,40 @@ public class StageActivity extends AndroidApplication {
 		}
 	}
 
+	private void ifPortraitSwitchWidthAndHeight() {
+		if (ScreenValues.SCREEN_WIDTH < ScreenValues.SCREEN_HEIGHT) {
+			int tmp = ScreenValues.SCREEN_HEIGHT;
+			ScreenValues.SCREEN_HEIGHT = ScreenValues.SCREEN_WIDTH;
+			ScreenValues.SCREEN_WIDTH = tmp;
+		}
+	}
+
 	@Override
 	protected void onDestroy() {
 		if (droneConnection != null) {
 			droneConnection.destroy();
 		}
+
+		ServiceProvider.getService(CatroidService.BLUETOOTH_DEVICE_SERVICE).destroy();
+
 		Log.d(TAG, "Destroy");
 		LedUtil.destroy();
 		VibratorUtil.destroy();
 		super.onDestroy();
 	}
 
+	@Override
+	public ApplicationListener getApplicationListener() {
+		return stageListener;
+	}
+
+	@Override
+	public void log(String tag, String message, Throwable exception) {
+		Log.d(tag, message, exception);
+	}
+
+	@Override
+	public int getLogLevel() {
+		return 0;
+	}
 }
