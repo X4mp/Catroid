@@ -88,14 +88,14 @@ dependencies {
 }
 
 task copyAndroidNatives() {
-    file("jniLibs/armeabi/").mkdirs();
-    file("jniLibs/armeabi-v7a/").mkdirs();
-    file("jniLibs/x86/").mkdirs();
+    file("catroid/jniLibs/armeabi/").mkdirs();
+    file("catroid/jniLibs/armeabi-v7a/").mkdirs();
+    file("catroid/jniLibs/x86/").mkdirs();
     configurations.natives.files.each { jar ->
         def outputDir = null
-        if(jar.name.endsWith("natives-armeabi-v7a.jar")) outputDir = file("jniLibs/armeabi-v7a")
-        if(jar.name.endsWith("natives-armeabi.jar")) outputDir = file("jniLibs/armeabi")
-        if(jar.name.endsWith("natives-x86.jar")) outputDir = file("jniLibs/x86")
+        if(jar.name.endsWith("natives-armeabi-v7a.jar")) outputDir = file("catroid/jniLibs/armeabi-v7a")
+        if(jar.name.endsWith("natives-armeabi.jar")) outputDir = file("catroid/jniLibs/armeabi")
+        if(jar.name.endsWith("natives-x86.jar")) outputDir = file("catroid/jniLibs/x86")
         if(outputDir != null) {
             copy {
                 from zipTree(jar)
@@ -186,7 +186,7 @@ android {
             res.srcDirs = ['src/main/res', 'src/androidTest/res']
             assets.srcDirs = ['src/main/assets', 'src/androidTest/assets']
 
-            //jniLibs.srcDirs = ['catroid/jniLibs']
+            jniLibs.srcDirs = ['catroid/jniLibs']
         }
     }
 }
