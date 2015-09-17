@@ -1,6 +1,6 @@
 /*
  * Catroid: An on-device visual programming system for Android devices
- * Copyright (C) 2010-2014 The Catrobat Team
+ * Copyright (C) 2010-2015 The Catrobat Team
  * (<http://developer.catrobat.org/credits>)
  *
  * This program is free software: you can redistribute it and/or modify
@@ -23,6 +23,7 @@
 package org.catrobat.catroid.uitest.formulaeditor;
 
 import android.graphics.Rect;
+import android.view.View;
 import android.widget.ImageButton;
 import android.widget.TextView;
 
@@ -40,13 +41,12 @@ import org.catrobat.catroid.formulaeditor.Formula;
 import org.catrobat.catroid.formulaeditor.FormulaEditorEditText;
 import org.catrobat.catroid.formulaeditor.FormulaEditorHistory;
 import org.catrobat.catroid.formulaeditor.InterpretationException;
+import org.catrobat.catroid.test.utils.Reflection;
 import org.catrobat.catroid.ui.MainMenuActivity;
 import org.catrobat.catroid.uitest.util.BaseActivityInstrumentationTestCase;
-import org.catrobat.catroid.uitest.util.Reflection;
 import org.catrobat.catroid.uitest.util.UiTestUtils;
 
 public class FormulaEditorFragmentTest extends BaseActivityInstrumentationTestCase<MainMenuActivity> {
-	private Project project;
 	private PlaceAtBrick placeAtBrick;
 	private static final int INITIAL_X = 8;
 	private static final int INITIAL_Y = 7;
@@ -68,7 +68,7 @@ public class FormulaEditorFragmentTest extends BaseActivityInstrumentationTestCa
 	}
 
 	private void createProject() {
-		project = new Project(null, UiTestUtils.DEFAULT_TEST_PROJECT_NAME);
+		Project project = new Project(null, UiTestUtils.DEFAULT_TEST_PROJECT_NAME);
 		sprite = new Sprite("cat");
 		Script script = new StartScript();
 		placeAtBrick = new PlaceAtBrick(INITIAL_X, INITIAL_Y);
@@ -111,7 +111,6 @@ public class FormulaEditorFragmentTest extends BaseActivityInstrumentationTestCa
 
 		solo.goBack();
 		solo.goBack();
-
 	}
 
 	public void testOnTheFlyUpdateOfBrickEditText() {
@@ -133,7 +132,7 @@ public class FormulaEditorFragmentTest extends BaseActivityInstrumentationTestCa
 				.toString());
 
 		solo.clickOnView(solo.getView(R.id.formula_editor_keyboard_ok));
-		solo.sleep(50);
+		solo.sleep(200);
 		assertEquals("Wrong text in X EditText", "12 ", ((TextView) solo.getView(X_POS_EDIT_TEXT_RID)).getText()
 				.toString());
 	}
@@ -156,35 +155,34 @@ public class FormulaEditorFragmentTest extends BaseActivityInstrumentationTestCa
 		assertEquals("Wrong text in field", "1 - 2 × cos( sin( tan( 0 ) ) ) ",
 				solo.getEditText(FORMULA_EDITOR_EDIT_TEXT_ID).getText().toString());
 
-		solo.clickOnView(solo.getView(R.id.formula_editor_keyboard_undo));
+		solo.clickOnView(solo.getView(R.id.menu_undo));
 		solo.sleep(50);
 		assertEquals("Undo did something wrong", "1 - 2 × cos( sin( 0 ) ) ",
 				solo.getEditText(FORMULA_EDITOR_EDIT_TEXT_ID).getText().toString());
 
-		solo.clickOnView(solo.getView(R.id.formula_editor_keyboard_undo));
+		solo.clickOnView(solo.getView(R.id.menu_undo));
 		solo.sleep(50);
 		assertEquals("Undo did something wrong", "1 - 2 × cos( 0 ) ", solo.getEditText(FORMULA_EDITOR_EDIT_TEXT_ID)
 				.getText().toString());
 
-		solo.clickOnView(solo.getView(R.id.formula_editor_keyboard_undo));
+		solo.clickOnView(solo.getView(R.id.menu_undo));
 		solo.sleep(50);
 		assertEquals("Undo did something wrong", "1 - 2 × ", solo.getEditText(FORMULA_EDITOR_EDIT_TEXT_ID).getText()
 				.toString());
 
-		solo.clickOnView(solo.getView(R.id.formula_editor_keyboard_undo));
+		solo.clickOnView(solo.getView(R.id.menu_undo));
 		solo.sleep(50);
 		assertEquals("Undo did something wrong", "1 - 2 ", solo.getEditText(FORMULA_EDITOR_EDIT_TEXT_ID).getText()
 				.toString());
 
 		solo.clickOnView(solo.getView(R.id.formula_editor_keyboard_ok));
 
-		solo.sleep(50);
+		solo.sleep(200);
 		assertEquals("Undo did something wrong", "1 - 2 ", ((TextView) solo.getView(X_POS_EDIT_TEXT_RID)).getText()
 				.toString());
 
 		solo.goBack();
 		solo.goBack();
-
 	}
 
 	public void testUndoRedo() {
@@ -205,20 +203,20 @@ public class FormulaEditorFragmentTest extends BaseActivityInstrumentationTestCa
 				.toString());
 
 		for (int i = 0; i < 7; i++) {
-			solo.clickOnView(solo.getView(R.id.formula_editor_keyboard_undo));
+			solo.clickOnView(solo.getView(R.id.menu_undo));
 		}
 
 		solo.sleep(50);
 		assertEquals("Undo did something wrong", INITIAL_X + " ", solo.getEditText(FORMULA_EDITOR_EDIT_TEXT_ID)
 				.getText().toString());
 
-		solo.clickOnView(solo.getView(R.id.formula_editor_keyboard_undo));
+		solo.clickOnView(solo.getView(R.id.menu_undo));
 
 		assertEquals("Undo did something wrong", INITIAL_X + " ", solo.getEditText(FORMULA_EDITOR_EDIT_TEXT_ID)
 				.getText().toString());
 
 		for (int i = 0; i < 7; i++) {
-			solo.clickOnView(solo.getView(R.id.formula_editor_keyboard_redo));
+			solo.clickOnView(solo.getView(R.id.menu_redo));
 		}
 
 		solo.sleep(50);
@@ -228,7 +226,6 @@ public class FormulaEditorFragmentTest extends BaseActivityInstrumentationTestCa
 		solo.goBack();
 		solo.waitForText(solo.getString(R.string.formula_editor_discard_changes_dialog_title));
 		solo.clickOnButton(solo.getString(R.string.no));
-
 	}
 
 	public void testUndoLimit() {
@@ -250,13 +247,13 @@ public class FormulaEditorFragmentTest extends BaseActivityInstrumentationTestCa
 				.getText().toString());
 
 		for (int i = 0; i < maxHistoryElements + 2; i++) {
-			solo.clickOnView(solo.getView(R.id.formula_editor_keyboard_undo));
+			solo.clickOnView(solo.getView(R.id.menu_undo));
 		}
 
 		assertEquals("Wrong text in field", "1 ", solo.getEditText(FORMULA_EDITOR_EDIT_TEXT_ID).getText().toString());
 
 		for (int i = 0; i < maxHistoryElements + 2; i++) {
-			solo.clickOnView(solo.getView(R.id.formula_editor_keyboard_redo));
+			solo.clickOnView(solo.getView(R.id.menu_redo));
 		}
 
 		assertEquals("Wrong text in field", "1" + searchString + " ", solo.getEditText(FORMULA_EDITOR_EDIT_TEXT_ID)
@@ -265,7 +262,6 @@ public class FormulaEditorFragmentTest extends BaseActivityInstrumentationTestCa
 		solo.goBack();
 		solo.waitForText(solo.getString(R.string.formula_editor_discard_changes_dialog_title));
 		solo.clickOnButton(solo.getString(R.string.no));
-
 	}
 
 	public void testSimpleInterpretation() {
@@ -325,19 +321,19 @@ public class FormulaEditorFragmentTest extends BaseActivityInstrumentationTestCa
 		//Interpretation test
 
 		Formula formula = placeAtBrick.getFormulaWithBrickField(Brick.BrickField.X_POSITION);
-        try{
-            assertEquals("Wrong text in field", newXValue, formula.interpretInteger(sprite).intValue());
-        }catch (InterpretationException interpretationException){
-            fail("Wrong text in field.");
-        }
+		try {
+			assertEquals("Wrong text in field", newXValue, formula.interpretInteger(sprite).intValue());
+		} catch (InterpretationException interpretationException) {
+			fail("Wrong text in field.");
+		}
 
 		formula = placeAtBrick.getFormulaWithBrickField(Brick.BrickField.Y_POSITION);
-        try{
-            float newYValue = formula.interpretFloat(sprite);
-            assertTrue("Wrong text in field", newYValue >= -0.5f && newYValue <= 1f);
-        }catch (InterpretationException interpretationException){
-            fail("Wrong text in field.");
-        }
+		try {
+			float newYValue = formula.interpretFloat(sprite);
+			assertTrue("Wrong text in field", newYValue >= -0.5f && newYValue <= 1f);
+		} catch (InterpretationException interpretationException) {
+			fail("Wrong text in field.");
+		}
 	}
 
 	public void testRandomInterpretationWithFloatParameters() {
@@ -357,13 +353,13 @@ public class FormulaEditorFragmentTest extends BaseActivityInstrumentationTestCa
 		solo.sleep(300);
 
 		Formula formula = placeAtBrick.getFormulaWithBrickField(Brick.BrickField.X_POSITION);
-        try{
-            float value = formula.interpretFloat(sprite);
-            assertTrue("random() interpretation of float parameter is wrong: " + newXFormula + " value=" + value,
-                    1 <= value && value <= 9.9f && (Math.abs(value) - (int) Math.abs(value)) > 0);
-        }catch (InterpretationException interpretationException){
-            fail("Wrong text in field.");
-        }
+		try {
+			float value = formula.interpretFloat(sprite);
+			assertTrue("random() interpretation of float parameter is wrong: " + newXFormula + " value=" + value,
+					1 <= value && value <= 9.9f && (Math.abs(value) - (int) Math.abs(value)) > 0);
+		} catch (InterpretationException interpretationException) {
+			fail("Wrong text in field.");
+		}
 
 		String newYFormula = "random(7.0,1)";
 
@@ -381,15 +377,15 @@ public class FormulaEditorFragmentTest extends BaseActivityInstrumentationTestCa
 
 		Formula anotherFormula = placeAtBrick.getFormulaWithBrickField(Brick.BrickField.Y_POSITION);
 
-        try{
-            float anotherValue = anotherFormula.interpretFloat(sprite);
-            assertTrue("random() interpretation of float parameter is wrong: " + newYFormula + " anotherValue="
-                            + anotherValue,
-                    1 <= anotherValue && anotherValue <= 7.0f
-                            && (Math.abs(anotherValue) - (int) Math.abs(anotherValue)) > 0);
-        }catch (InterpretationException interpretationException){
-            fail("Wrong text in field.");
-        }
+		try {
+			float anotherValue = anotherFormula.interpretFloat(sprite);
+			assertTrue("random() interpretation of float parameter is wrong: " + newYFormula + " anotherValue="
+							+ anotherValue,
+					1 <= anotherValue && anotherValue <= 7.0f
+							&& (Math.abs(anotherValue) - (int) Math.abs(anotherValue)) > 0);
+		} catch (InterpretationException interpretationException) {
+			fail("Wrong text in field.");
+		}
 	}
 
 	public void testRandomInterpretationWithIntegerParameters() {
@@ -411,15 +407,15 @@ public class FormulaEditorFragmentTest extends BaseActivityInstrumentationTestCa
 
 		Formula formula = placeAtBrick.getFormulaWithBrickField(Brick.BrickField.X_POSITION);
 
-        try{
-            float value = formula.interpretFloat(sprite);
-            assertTrue("random() interpretation of integer parameters is wrong: " + newXFormula + " anotherValue=" + value,
-                    (value == 1 || value == 2 || value == 3));
-            assertEquals("random() interpretation of integer parameters is wrong: " + newXFormula + " anotherValue="
-                    + value, 0, Math.abs(value) - (int) Math.abs(value), 0);
-        }catch (InterpretationException interpretationException){
-            fail("Wrong text in field.");
-        }
+		try {
+			float value = formula.interpretFloat(sprite);
+			assertTrue("random() interpretation of integer parameters is wrong: " + newXFormula + " anotherValue="
+					+ value, (value == 1 || value == 2 || value == 3));
+			assertEquals("random() interpretation of integer parameters is wrong: " + newXFormula + " anotherValue="
+					+ value, 0, Math.abs(value) - (int) Math.abs(value), 0);
+		} catch (InterpretationException interpretationException) {
+			fail("Wrong text in field.");
+		}
 
 		String newYFormula = "rand(4,1)";
 
@@ -434,15 +430,15 @@ public class FormulaEditorFragmentTest extends BaseActivityInstrumentationTestCa
 		solo.sleep(300);
 
 		Formula anotherFormula = placeAtBrick.getFormulaWithBrickField(Brick.BrickField.Y_POSITION);
-        try{
-            float anotherValue = anotherFormula.interpretFloat(sprite);
-            assertTrue("random() interpretation of integer parameters is wrong: " + newYFormula + " anotherValue="
-                    + anotherValue, (anotherValue == 1 || anotherValue == 2 || anotherValue == 3 || anotherValue == 4));
-            assertEquals("random() interpretation of integer parameters is wrong: " + newYFormula + " anotherValue="
-                    + anotherValue, 0, Math.abs(anotherValue) - (int) Math.abs(anotherValue), 0);
-        }catch (InterpretationException interpretationException){
-            fail("Wrong text in field.");
-        }
+		try {
+			float anotherValue = anotherFormula.interpretFloat(sprite);
+			assertTrue("random() interpretation of integer parameters is wrong: " + newYFormula + " anotherValue="
+					+ anotherValue, (anotherValue == 1 || anotherValue == 2 || anotherValue == 3 || anotherValue == 4));
+			assertEquals("random() interpretation of integer parameters is wrong: " + newYFormula + " anotherValue="
+					+ anotherValue, 0, Math.abs(anotherValue) - (int) Math.abs(anotherValue), 0);
+		} catch (InterpretationException interpretationException) {
+			fail("Wrong text in field.");
+		}
 	}
 
 	public void testIfLandscapeOrientationIsDeactivated() {
@@ -452,7 +448,6 @@ public class FormulaEditorFragmentTest extends BaseActivityInstrumentationTestCa
 		int orientation = getActivity().getRequestedOrientation();
 
 		assertTrue("Landscape Orientation isn't deactivated", orientation == Solo.PORTRAIT);
-
 	}
 
 	public void testGoBackAndEditTextSwitches() {
@@ -488,7 +483,6 @@ public class FormulaEditorFragmentTest extends BaseActivityInstrumentationTestCa
 		solo.clickOnView(solo.getView(Y_POS_EDIT_TEXT_RID, 1));
 		isFound = solo.searchText("5") && solo.searchText("-") && solo.searchText("4");
 		assertTrue("5 - 4 not found!", isFound);
-
 	}
 
 	public void testRedoAndUndoButtonViewOfKeyboard() {
@@ -497,8 +491,8 @@ public class FormulaEditorFragmentTest extends BaseActivityInstrumentationTestCa
 		assertTrue("Formula Editor Fragment not shown!",
 				solo.waitForText(solo.getString(R.string.formula_editor_title)));
 
-		ImageButton undo = (ImageButton) solo.getView(R.id.formula_editor_keyboard_undo);
-		ImageButton redo = (ImageButton) solo.getView(R.id.formula_editor_keyboard_redo);
+		View undo = solo.getView(R.id.menu_undo);
+		View redo = solo.getView(R.id.menu_redo);
 
 		assertTrue("Undo Button not inactive!", !undo.isEnabled());
 		assertTrue("Redo Button not inactive!", !redo.isEnabled());
@@ -509,16 +503,17 @@ public class FormulaEditorFragmentTest extends BaseActivityInstrumentationTestCa
 		assertTrue("Undo Button not active!", undo.isEnabled());
 		assertTrue("Redo Button not inactive!", !redo.isEnabled());
 
-		solo.clickOnView(solo.getView(R.id.formula_editor_keyboard_undo));
+		solo.clickOnView(solo.getView(R.id.menu_undo));
+		solo.sleep(100);
 
 		assertTrue("Undo Button not active!", undo.isEnabled());
 		assertTrue("Redo Button not active!", redo.isEnabled());
 
-		solo.clickOnView(solo.getView(R.id.formula_editor_keyboard_undo));
+		solo.clickOnView(solo.getView(R.id.menu_undo));
+		solo.sleep(100);
 
 		assertTrue("Undo Button not inactive!", !undo.isEnabled());
 		assertTrue("Redo Button not active!", redo.isEnabled());
-
 	}
 
 	public void testDeleteButtonViewOfKeyboard() {
@@ -527,27 +522,29 @@ public class FormulaEditorFragmentTest extends BaseActivityInstrumentationTestCa
 		assertTrue("Formula Editor Fragment not shown!",
 				solo.waitForText(solo.getString(R.string.formula_editor_title)));
 
-		ImageButton delete = (ImageButton) solo.getView(R.id.formula_editor_edit_field_clear);
-		assertTrue("Delete Button not active!", delete.isEnabled());
+		ImageButton deleteEditField = (ImageButton) solo.getView(R.id.formula_editor_edit_field_clear);
+		ImageButton deleteKeyboard = (ImageButton) solo.getView(R.id.formula_editor_keyboard_delete);
+		assertTrue("Delete Button not active!", areDeleteButtonsEnabled(deleteEditField, deleteKeyboard));
 
 		solo.clickOnView(solo.getView(R.id.formula_editor_edit_field_clear));
-		assertTrue("Delete Button not inactive!", !delete.isEnabled());
+		assertTrue("Delete Button not inactive!", !areDeleteButtonsEnabled(deleteEditField, deleteKeyboard));
 
 		solo.clickOnView(solo.getView(R.id.formula_editor_keyboard_function));
 		solo.clickOnText(solo.getString(R.string.formula_editor_function_rand));
 		solo.waitForText(solo.getString(R.string.formula_editor_title));
-		assertTrue("Delete Button not active!", delete.isEnabled());
+		assertTrue("Delete Button not active!", areDeleteButtonsEnabled(deleteEditField, deleteKeyboard));
 
 		setAbsoluteCursorPosition(0);
-		assertTrue("Delete Button not inactive!", !delete.isEnabled());
+		assertTrue("Delete Button not inactive!", !areDeleteButtonsEnabled(deleteEditField, deleteKeyboard));
 
-		solo.clickOnView(solo.getView(R.id.formula_editor_keyboard_undo));
-		solo.clickOnView(solo.getView(R.id.formula_editor_keyboard_undo));
-		assertTrue("Delete Button not active!", delete.isEnabled());
+		solo.clickOnView(solo.getView(R.id.menu_undo));
+		solo.clickOnView(solo.getView(R.id.menu_undo));
+		solo.sleep(200);
+		assertTrue("Delete Button not active!", areDeleteButtonsEnabled(deleteEditField, deleteKeyboard));
 
-		solo.clickOnView(solo.getView(R.id.formula_editor_keyboard_redo));
-		solo.clickOnView(solo.getView(R.id.formula_editor_keyboard_redo));
-		assertTrue("Delete Button not inactive!", !delete.isEnabled());
+		solo.clickOnView(solo.getView(R.id.menu_redo));
+		solo.clickOnView(solo.getView(R.id.menu_redo));
+		assertTrue("Delete Button not inactive!", !areDeleteButtonsEnabled(deleteEditField, deleteKeyboard));
 	}
 
 	private void setAbsoluteCursorPosition(int position) {
@@ -561,5 +558,9 @@ public class FormulaEditorFragmentTest extends BaseActivityInstrumentationTestCa
 		Rect globalVisibleRect = new Rect();
 		solo.getEditText(FORMULA_EDITOR_EDIT_TEXT_ID).getGlobalVisibleRect(globalVisibleRect);
 		solo.clickOnScreen(30, globalVisibleRect.top + 10);
+	}
+
+	private boolean areDeleteButtonsEnabled(ImageButton deleteEditField, ImageButton deleteKeyboard) {
+		return deleteEditField.isEnabled() && deleteKeyboard.isEnabled();
 	}
 }

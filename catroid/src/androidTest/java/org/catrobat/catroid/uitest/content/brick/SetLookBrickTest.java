@@ -1,6 +1,6 @@
 /*
  * Catroid: An on-device visual programming system for Android devices
- * Copyright (C) 2010-2014 The Catrobat Team
+ * Copyright (C) 2010-2015 The Catrobat Team
  * (<http://developer.catrobat.org/credits>)
  *
  * This program is free software: you can redistribute it and/or modify
@@ -24,6 +24,7 @@ package org.catrobat.catroid.uitest.content.brick;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.widget.Spinner;
 
 import org.catrobat.catroid.ProjectManager;
 import org.catrobat.catroid.R;
@@ -41,7 +42,6 @@ import org.catrobat.catroid.ui.ProgramMenuActivity;
 import org.catrobat.catroid.ui.ScriptActivity;
 import org.catrobat.catroid.ui.controller.LookController;
 import org.catrobat.catroid.ui.fragment.LookFragment;
-import org.catrobat.catroid.uitest.annotation.Device;
 import org.catrobat.catroid.uitest.util.BaseActivityInstrumentationTestCase;
 import org.catrobat.catroid.uitest.util.UiTestUtils;
 
@@ -90,6 +90,17 @@ public class SetLookBrickTest extends BaseActivityInstrumentationTestCase<MainMe
 		super.tearDown();
 	}
 
+	public void testDismissNewLookDialog() {
+		solo.clickOnText(lookName);
+		solo.clickOnText(solo.getString(R.string.new_broadcast_message));
+		solo.waitForDialogToOpen();
+		solo.goBack();
+		solo.waitForDialogToClose();
+
+		assertEquals("Not in ScriptActivity", "ui.ScriptActivity", solo.getCurrentActivity().getLocalClassName());
+		assertTrue("Spinner not updated", solo.waitForText(lookName));
+	}
+
 	public void testSelectLookAndPlay() {
 		assertTrue(lookName + " is not selected in Spinner", solo.isSpinnerTextSelected(lookName));
 
@@ -134,7 +145,6 @@ public class SetLookBrickTest extends BaseActivityInstrumentationTestCase<MainMe
 
 		assertFalse(lookName + " is still in Spinner", solo.searchText(lookName));
 		assertTrue(lookName2 + " is not in Spinner", solo.searchText(lookName2));
-
 	}
 
 	public void testSpinnerUpdatesRename() {
@@ -162,7 +172,6 @@ public class SetLookBrickTest extends BaseActivityInstrumentationTestCase<MainMe
 
 		assertTrue(newName + " is not in Spinner", solo.searchText(newName));
 		assertTrue(lookName2 + " is not in Spinner", solo.searchText(lookName2));
-
 	}
 
 	public void testAdapterUpdateInScriptActivity() {
@@ -183,7 +192,6 @@ public class SetLookBrickTest extends BaseActivityInstrumentationTestCase<MainMe
 		}
 	}
 
-	@Device
 	public void testAddNewLook() {
 		String newText = solo.getString(R.string.new_broadcast_message);
 
@@ -200,19 +208,23 @@ public class SetLookBrickTest extends BaseActivityInstrumentationTestCase<MainMe
 		solo.clickOnText(newText);
 
 		ScriptActivity currentActivity = (ScriptActivity) solo.getCurrentActivity();
-		solo.sleep(200);
+		solo.waitForFragmentByTag(LookFragment.TAG);
+
 		LookFragment lookFragment = (LookFragment) currentActivity.getFragment(ScriptActivity.FRAGMENT_LOOKS);
 		lookFragment.startActivityForResult(intent, LookController.REQUEST_SELECT_OR_DRAW_IMAGE);
-
-		solo.sleep(200);
 		solo.waitForActivity(ScriptActivity.class.getSimpleName());
 		solo.goBack();
+		//This is needed, because the spinner is only updated, when you actually click on the dialog
+		//and not using the MockActivity. This functionality is tested in testDismissNewLookDialog()
+		solo.clickOnView(solo.getView(Spinner.class, 0));
+
 		assertTrue("Testfile not added from mockActivity", solo.searchText(testFile));
 
-		solo.waitForFragmentByTag(LookFragment.TAG);
-		assertTrue(testFile + " is not selected in Spinner", solo.isSpinnerTextSelected(testFile));
-
 		solo.goBack();
+		solo.goBack();
+
+		solo.waitForActivity(ProgramMenuActivity.class.getSimpleName());
+
 		String programMenuActivityClass = ProgramMenuActivity.class.getSimpleName();
 		assertTrue("Should be in " + programMenuActivityClass, solo.getCurrentActivity().getClass().getSimpleName()
 				.equals(programMenuActivityClass));

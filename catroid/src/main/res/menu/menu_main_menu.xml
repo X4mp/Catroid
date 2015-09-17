@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
   ~ Catroid: An on-device visual programming system for Android devices
-  ~ Copyright (C) 2010-2014 The Catrobat Team
+  ~ Copyright (C) 2010-2015 The Catrobat Team
   ~ (<http://developer.catrobat.org/credits>)
   ~
   ~ This program is free software: you can redistribute it and/or modify
@@ -26,18 +26,18 @@
     <item
         android:id="@+id/menu_rate_app"
         android:showAsAction="withText"
-        android:title="@string/main_menu_rate_app"/>
+        android:title="@string/main_menu_rate_app" />
     <item
         android:id="@+id/menu_terms_of_use"
         android:showAsAction="withText"
-        android:title="@string/main_menu_terms_of_use"/>
+        android:title="@string/main_menu_terms_of_use" />
     <item
         android:id="@+id/menu_about"
         android:showAsAction="withText"
-        android:title="@string/main_menu_about_pocketcode"/>
+        android:title="@string/main_menu_about_pocketcode" />
     <item
         android:id="@+id/settings"
         android:showAsAction="never"
-        android:title="@string/settings"/>
+        android:title="@string/settings" />
 
 </menu>

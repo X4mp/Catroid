@@ -1,6 +1,6 @@
 /*
  * Catroid: An on-device visual programming system for Android devices
- * Copyright (C) 2010-2014 The Catrobat Team
+ * Copyright (C) 2010-2015 The Catrobat Team
  * (<http://developer.catrobat.org/credits>)
  *
  * This program is free software: you can redistribute it and/or modify
@@ -133,7 +133,6 @@ public class SetSizeToBrickTest extends BaseActivityInstrumentationTestCase<Main
 		assertEquals("Image was not scaled up even though SetSizeTo was exectuted before!", Color.RED,
 				colorInsideSizedQuad);
 		assertEquals("Wrong stage background color!", Color.WHITE, colorOutsideSizedQuad);
-
 	}
 
 	private void createProject() {
@@ -169,5 +168,4 @@ public class SetSizeToBrickTest extends BaseActivityInstrumentationTestCase<Main
 				.addChecksum(lookData.getChecksum(), image.getAbsolutePath());
 		StorageHandler.getInstance().saveProject(project);
 	}
-
 }

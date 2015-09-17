@@ -1,6 +1,6 @@
 /*
  * Catroid: An on-device visual programming system for Android devices
- * Copyright (C) 2010-2014 The Catrobat Team
+ * Copyright (C) 2010-2015 The Catrobat Team
  * (<http://developer.catrobat.org/credits>)
  *
  * This program is free software: you can redistribute it and/or modify
@@ -82,7 +82,6 @@ public class LegoNxtPlayToneBrickTest extends BaseActivityInstrumentationTestCas
 
 		UiTestUtils.testBrickWithFormulaEditor(solo, ProjectManager.getInstance().getCurrentSprite(),
 				R.id.nxt_tone_freq_edit_text, SET_FREQUENCY, Brick.BrickField.LEGO_NXT_FREQUENCY, playToneBrick);
-
 	}
 
 	private void createProject() {

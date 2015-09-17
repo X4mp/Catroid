@@ -1,6 +1,6 @@
 /*
  * Catroid: An on-device visual programming system for Android devices
- * Copyright (C) 2010-2014 The Catrobat Team
+ * Copyright (C) 2010-2015 The Catrobat Team
  * (<http://developer.catrobat.org/credits>)
  *
  * This program is free software: you can redistribute it and/or modify
@@ -29,6 +29,7 @@ import android.content.pm.PackageManager;
 import android.content.pm.PackageManager.NameNotFoundException;
 import android.content.res.Configuration;
 import android.preference.PreferenceManager;
+import android.util.Log;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ListView;
@@ -64,6 +65,7 @@ import java.io.File;
 import java.io.IOException;
 
 public class MainMenuActivityTest extends BaseActivityInstrumentationTestCase<MainMenuActivity> {
+	private static final String TAG = MainMenuActivityTest.class.getSimpleName();
 
 	private String testProject = UiTestUtils.PROJECTNAME1;
 	private String testProject2 = UiTestUtils.PROJECTNAME2;
@@ -89,10 +91,7 @@ public class MainMenuActivityTest extends BaseActivityInstrumentationTestCase<Ma
 		UtilFile.deleteDirectory(new File(Utils.buildProjectPath(projectNameJustSpecialChars2)));
 		UtilFile.deleteDirectory(new File(Utils.buildProjectPath(projectNameJustOneDot)));
 		UtilFile.deleteDirectory(new File(Utils.buildProjectPath(projectNameJustTwoDots)));
-		// normally super.teardown should be called last
-		// but tests crashed with Nullpointer
 		super.tearDown();
-		ProjectManager.getInstance().deleteCurrentProject();
 	}
 
 	public void testCreateNewProject() {
@@ -113,6 +112,9 @@ public class MainMenuActivityTest extends BaseActivityInstrumentationTestCase<Ma
 		String buttonOKText = solo.getString(R.string.ok);
 		solo.waitForText(buttonOKText);
 		solo.clickOnText(buttonOKText);
+		assertTrue("dialog not loaded in 5 seconds",
+				solo.waitForText(solo.getString(R.string.project_orientation_title), 0, 5000));
+		solo.clickOnButton(buttonOKText);
 		solo.waitForActivity(ProjectActivity.class.getSimpleName());
 
 		File file = new File(Constants.DEFAULT_ROOT + "/" + testProject + "/" + Constants.PROJECTCODE_NAME);
@@ -167,6 +169,9 @@ public class MainMenuActivityTest extends BaseActivityInstrumentationTestCase<Ma
 		String buttonOKText = solo.getString(R.string.ok);
 		solo.waitForText(buttonOKText);
 		solo.clickOnText(buttonOKText);
+		assertTrue("dialog not loaded in 5 seconds",
+				solo.waitForText(solo.getString(R.string.project_orientation_title), 0, 5000));
+		solo.clickOnButton(buttonOKText);
 		solo.waitForActivity(ProjectActivity.class.getSimpleName());
 
 		File file = new File(Utils.buildPath(directoryPath, Constants.PROJECTCODE_NAME));
@@ -184,6 +189,9 @@ public class MainMenuActivityTest extends BaseActivityInstrumentationTestCase<Ma
 		String buttonOKText = solo.getString(R.string.ok);
 		solo.waitForText(buttonOKText);
 		solo.clickOnText(buttonOKText);
+		assertTrue("dialog not loaded in 5 seconds",
+				solo.waitForText(solo.getString(R.string.project_orientation_title), 0, 5000));
+		solo.clickOnButton(buttonOKText);
 		solo.waitForActivity(ProjectActivity.class.getSimpleName());
 
 		File file = new File(Utils.buildPath(directoryPath, Constants.PROJECTCODE_NAME));
@@ -201,6 +209,9 @@ public class MainMenuActivityTest extends BaseActivityInstrumentationTestCase<Ma
 		String buttonOKText = solo.getString(R.string.ok);
 		solo.waitForText(buttonOKText);
 		solo.clickOnText(buttonOKText);
+		assertTrue("dialog not loaded in 5 seconds",
+				solo.waitForText(solo.getString(R.string.project_orientation_title), 0, 5000));
+		solo.clickOnButton(buttonOKText);
 		solo.waitForActivity(ProjectActivity.class.getSimpleName());
 
 		File file = new File(Utils.buildPath(directoryPath, Constants.PROJECTCODE_NAME));
@@ -218,6 +229,9 @@ public class MainMenuActivityTest extends BaseActivityInstrumentationTestCase<Ma
 		String buttonOKText = solo.getString(R.string.ok);
 		solo.waitForText(buttonOKText);
 		solo.clickOnText(buttonOKText);
+		assertTrue("dialog not loaded in 5 seconds",
+				solo.waitForText(solo.getString(R.string.project_orientation_title), 0, 5000));
+		solo.clickOnButton(buttonOKText);
 		solo.waitForActivity(ProjectActivity.class.getSimpleName());
 
 		File file = new File(Utils.buildPath(directoryPath, Constants.PROJECTCODE_NAME));
@@ -235,6 +249,9 @@ public class MainMenuActivityTest extends BaseActivityInstrumentationTestCase<Ma
 		String buttonOKText = solo.getString(R.string.ok);
 		solo.waitForText(buttonOKText);
 		solo.clickOnText(buttonOKText);
+		assertTrue("dialog not loaded in 5 seconds",
+				solo.waitForText(solo.getString(R.string.project_orientation_title), 0, 5000));
+		solo.clickOnButton(buttonOKText);
 		solo.waitForActivity(ProjectActivity.class.getSimpleName());
 
 		File file = new File(Utils.buildPath(directoryPath, Constants.PROJECTCODE_NAME));
@@ -252,6 +269,9 @@ public class MainMenuActivityTest extends BaseActivityInstrumentationTestCase<Ma
 		String buttonOKText = solo.getString(R.string.ok);
 		solo.waitForText(buttonOKText);
 		solo.clickOnText(buttonOKText);
+		assertTrue("dialog not loaded in 5 seconds",
+				solo.waitForText(solo.getString(R.string.project_orientation_title), 0, 5000));
+		solo.clickOnButton(buttonOKText);
 		solo.waitForActivity(ProjectActivity.class.getSimpleName());
 
 		File file = new File(Utils.buildPath(directoryPath, Constants.PROJECTCODE_NAME));
@@ -341,6 +361,7 @@ public class MainMenuActivityTest extends BaseActivityInstrumentationTestCase<Ma
 		solo.sendKey(Solo.MENU);
 		assertTrue("App rating menu not found in overflow menu!",
 				solo.searchText(solo.getString(R.string.main_menu_rate_app)));
+		solo.goBack();
 	}
 
 	public void testShouldDisplayDialogIfVersionNumberTooLow() throws Throwable {
@@ -420,8 +441,8 @@ public class MainMenuActivityTest extends BaseActivityInstrumentationTestCase<Ma
 			standardProject = StandardProjectHandler.createAndSaveStandardProject(standardProjectName,
 					getInstrumentation().getTargetContext());
 		} catch (IOException e) {
+			Log.e(TAG, "Could not create standard project", e);
 			fail("Could not create standard project");
-			e.printStackTrace();
 		}
 
 		if (standardProject == null) {
@@ -431,7 +452,7 @@ public class MainMenuActivityTest extends BaseActivityInstrumentationTestCase<Ma
 		StorageHandler.getInstance().saveProject(standardProject);
 
 		solo.waitForActivity(MainMenuActivity.class.getSimpleName());
-
+		solo.sleep(300);
 		solo.clickOnButton(solo.getString(R.string.main_menu_programs));
 		solo.waitForActivity(MyProjectsActivity.class.getSimpleName());
 
@@ -446,9 +467,9 @@ public class MainMenuActivityTest extends BaseActivityInstrumentationTestCase<Ma
 		ProjectManager.getInstance().setCurrentScript(startingScript);
 		StorageHandler.getInstance().saveProject(standardProject);
 
-		UiTestUtils.goBackToHome(getInstrumentation());
+		solo.goBack();
 		solo.waitForActivity(MainMenuActivity.class.getSimpleName());
-
+		solo.sleep(300);
 		SharedPreferences defaultSharedPreferences = PreferenceManager.getDefaultSharedPreferences(getInstrumentation()
 				.getTargetContext());
 		assertEquals("Standard project was not set in shared preferences", standardProjectName,
@@ -496,7 +517,6 @@ public class MainMenuActivityTest extends BaseActivityInstrumentationTestCase<Ma
 		solo.waitForActivity(MainMenuActivity.class.getSimpleName());
 		assertTrue("The name of the current testProject2 is not displayed on the continue button", solo.getButton(0)
 				.getText().toString().endsWith(testProject2));
-
 	}
 
 	public void testProjectNameWithNormalAndSpecialCharsVisible() {

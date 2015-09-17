@@ -1,6 +1,6 @@
 /*
  * Catroid: An on-device visual programming system for Android devices
- * Copyright (C) 2010-2014 The Catrobat Team
+ * Copyright (C) 2010-2015 The Catrobat Team
  * (<http://developer.catrobat.org/credits>)
  *
  * This program is free software: you can redistribute it and/or modify
@@ -24,6 +24,8 @@ package org.catrobat.catroid.test.utils;
 
 import android.app.NotificationManager;
 import android.content.Context;
+import android.content.SharedPreferences;
+import android.preference.PreferenceManager;
 import android.util.Log;
 import android.util.SparseArray;
 
@@ -41,6 +43,8 @@ import org.catrobat.catroid.content.bricks.IfLogicBeginBrick;
 import org.catrobat.catroid.content.bricks.IfLogicElseBrick;
 import org.catrobat.catroid.content.bricks.IfLogicEndBrick;
 import org.catrobat.catroid.content.bricks.ShowBrick;
+import org.catrobat.catroid.content.bricks.UserBrick;
+import org.catrobat.catroid.content.bricks.UserScriptDefinitionBrick;
 import org.catrobat.catroid.io.StorageHandler;
 import org.catrobat.catroid.utils.NotificationData;
 import org.catrobat.catroid.utils.StatusBarNotificationManager;
@@ -62,6 +66,7 @@ public final class TestUtils {
 	public static final int TYPE_SOUND_FILE = 1;
 	public static final String DEFAULT_TEST_PROJECT_NAME = "testProject";
 	public static final String CORRUPT_PROJECT_NAME = "copiedProject";
+	public static final String EMPTY_PROJECT = "emptyProject";
 
 	private static final String TAG = TestUtils.class.getSimpleName();
 
@@ -256,7 +261,14 @@ public final class TestUtils {
 				DEFAULT_TEST_PROJECT_NAME);
 	}
 
+	public static Project createEmptyProject() {
+		Project project = new Project(null, EMPTY_PROJECT);
+		StorageHandler.getInstance().saveProject(project);
+		return project;
+	}
+
 	public static void deleteTestProjects(String... additionalProjectNames) {
+		Log.d(TAG, "deleteTestProjects");
 		ProjectManager.getInstance().setFileChecksumContainer(new FileChecksumContainer());
 
 		File directory = new File(Constants.DEFAULT_ROOT + "/" + DEFAULT_TEST_PROJECT_NAME);
@@ -287,5 +299,19 @@ public final class TestUtils {
 		}
 
 		notificationMap.clear();
+	}
+
+	public static Script addUserBrickToSpriteAndGetUserScript(UserBrick userBrick, Sprite sprite) {
+		UserScriptDefinitionBrick definitionBrick = (UserScriptDefinitionBrick) Reflection.getPrivateField(userBrick,
+				"definitionBrick");
+		sprite.addUserBrick(userBrick);
+		return definitionBrick.getScriptSafe();
+	}
+
+	public static void removeFromPreferences(Context context, String key) {
+		SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(context);
+		SharedPreferences.Editor edit = preferences.edit();
+		edit.remove(key);
+		edit.commit();
 	}
 }

@@ -1,6 +1,6 @@
 /*
  * Catroid: An on-device visual programming system for Android devices
- * Copyright (C) 2010-2014 The Catrobat Team
+ * Copyright (C) 2010-2015 The Catrobat Team
  * (<http://developer.catrobat.org/credits>)
  *
  * This program is free software: you can redistribute it and/or modify
@@ -79,9 +79,7 @@ public class SoundManagerTest extends InstrumentationTestCase {
 		try {
 			mediaPlayer.isPlaying();
 			fail("The media player hasn't been released");
-		} catch (IllegalStateException expectedIllegalStateException) {
-			// The media player has been released and therefore isPlaying throws an IllegalStateException.
-			assertTrue("Expected Exception", true);
+		} catch (IllegalStateException expected) {
 		}
 	}
 

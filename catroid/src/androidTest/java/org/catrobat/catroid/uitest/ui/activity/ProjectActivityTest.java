@@ -1,6 +1,6 @@
 /*
  * Catroid: An on-device visual programming system for Android devices
- * Copyright (C) 2010-2014 The Catrobat Team
+ * Copyright (C) 2010-2015 The Catrobat Team
  * (<http://developer.catrobat.org/credits>)
  *
  * This program is free software: you can redistribute it and/or modify
@@ -57,13 +57,14 @@ import org.catrobat.catroid.content.bricks.LoopBeginBrick;
 import org.catrobat.catroid.content.bricks.LoopEndBrick;
 import org.catrobat.catroid.content.bricks.SetVariableBrick;
 import org.catrobat.catroid.content.bricks.SetXBrick;
+import org.catrobat.catroid.formulaeditor.DataContainer;
 import org.catrobat.catroid.formulaeditor.Formula;
 import org.catrobat.catroid.formulaeditor.FormulaElement;
 import org.catrobat.catroid.formulaeditor.InternToken;
 import org.catrobat.catroid.formulaeditor.UserVariable;
-import org.catrobat.catroid.formulaeditor.UserVariablesContainer;
 import org.catrobat.catroid.io.StorageHandler;
 import org.catrobat.catroid.stage.StageActivity;
+import org.catrobat.catroid.test.utils.Reflection;
 import org.catrobat.catroid.ui.MainMenuActivity;
 import org.catrobat.catroid.ui.MyProjectsActivity;
 import org.catrobat.catroid.ui.ProgramMenuActivity;
@@ -72,7 +73,6 @@ import org.catrobat.catroid.ui.ScriptActivity;
 import org.catrobat.catroid.ui.SettingsActivity;
 import org.catrobat.catroid.ui.dialogs.NewSpriteDialog.ActionAfterFinished;
 import org.catrobat.catroid.uitest.util.BaseActivityInstrumentationTestCase;
-import org.catrobat.catroid.uitest.util.Reflection;
 import org.catrobat.catroid.uitest.util.UiTestUtils;
 import org.catrobat.catroid.utils.UtilFile;
 import org.catrobat.catroid.utils.Utils;
@@ -84,6 +84,8 @@ import java.util.List;
 import java.util.Locale;
 
 public class ProjectActivityTest extends BaseActivityInstrumentationTestCase<MainMenuActivity> {
+	private static final String TAG = ProjectActivityTest.class.getSimpleName();
+
 	private static final String TEST_SPRITE_NAME = "cat";
 	private static final String FIRST_TEST_SPRITE_NAME = "test1";
 	private static final String SECOND_TEST_SPRITE_NAME = "test2";
@@ -145,17 +147,17 @@ public class ProjectActivityTest extends BaseActivityInstrumentationTestCase<Mai
 		ProjectManager.getInstance().setProject(project);
 		ProjectManager.getInstance().setCurrentSprite(secondSprite);
 
-		ProjectManager.getInstance().getCurrentProject().getUserVariables().addSpriteUserVariable("p");
-		ProjectManager.getInstance().getCurrentProject().getUserVariables().addSpriteUserVariable("q");
+		ProjectManager.getInstance().getCurrentProject().getDataContainer().addSpriteUserVariable("p");
+		ProjectManager.getInstance().getCurrentProject().getDataContainer().addSpriteUserVariable("q");
 
 		Double setVariable1ToValue = Double.valueOf(3d);
 		Double setVariable2ToValue = Double.valueOf(8d);
 
 		SetVariableBrick setVariableBrick1 = new SetVariableBrick(new Formula(setVariable1ToValue),
-				ProjectManager.getInstance().getCurrentProject().getUserVariables().getUserVariable("p", secondSprite));
+				ProjectManager.getInstance().getCurrentProject().getDataContainer().getUserVariable("p", secondSprite));
 
 		SetVariableBrick setVariableBrick2 = new SetVariableBrick(new Formula(setVariable2ToValue),
-				ProjectManager.getInstance().getCurrentProject().getUserVariables().getUserVariable("q", secondSprite));
+				ProjectManager.getInstance().getCurrentProject().getDataContainer().getUserVariable("q", secondSprite));
 
 		Script startScript1 = new StartScript();
 		secondSprite.addScript(startScript1);
@@ -167,16 +169,18 @@ public class ProjectActivityTest extends BaseActivityInstrumentationTestCase<Mai
 		solo.sleep(200);
 		solo.clickLongOnText(defaultSpriteName);
 		solo.sleep(200);
+
 		assertEquals("Copy is not in context menu!", true, solo.searchText(getActivity().getString(R.string.copy)));
+
 		solo.clickOnText(getActivity().getString(R.string.copy));
 		solo.clickLongOnText(defaultSpriteName);
 		Sprite copiedSprite = project.getSpriteList().get(2);
 		ProjectManager.getInstance().setCurrentSprite(copiedSprite);
 
-		double q = (Double) ProjectManager.getInstance().getCurrentProject().getUserVariables()
+		double q = (Double) ProjectManager.getInstance().getCurrentProject().getDataContainer()
 				.getUserVariable("q", copiedSprite).getValue();
 
-		double p = (Double) ProjectManager.getInstance().getCurrentProject().getUserVariables()
+		double p = (Double) ProjectManager.getInstance().getCurrentProject().getDataContainer()
 				.getUserVariable("p", copiedSprite).getValue();
 
 		Log.e("CATROID", "q hat den Wert: " + q);
@@ -199,30 +203,28 @@ public class ProjectActivityTest extends BaseActivityInstrumentationTestCase<Mai
 		ProjectManager.getInstance().setProject(project);
 		ProjectManager.getInstance().setCurrentSprite(secondSprite);
 
-		ProjectManager.getInstance().getCurrentProject().getUserVariables()
+		ProjectManager.getInstance().getCurrentProject().getDataContainer()
 				.addSpriteUserVariable(firstUserVariableName);
-		ProjectManager.getInstance().getCurrentProject().getUserVariables()
+		ProjectManager.getInstance().getCurrentProject().getDataContainer()
 				.addProjectUserVariable(secondUserVariableName);
 
 		Double setVariable1ToValue = Double.valueOf(3d);
 		Double setVariable2ToValue = Double.valueOf(8d);
 
 		SetVariableBrick setVariableBrick1 = new SetVariableBrick(new Formula(setVariable1ToValue),
-				ProjectManager.getInstance().getCurrentProject().getUserVariables()
-						.getUserVariable(firstUserVariableName, secondSprite)
-		);
+				ProjectManager.getInstance().getCurrentProject().getDataContainer()
+						.getUserVariable(firstUserVariableName, secondSprite));
 
 		SetVariableBrick setVariableBrick2 = new SetVariableBrick(new Formula(setVariable2ToValue),
-				ProjectManager.getInstance().getCurrentProject().getUserVariables()
-						.getUserVariable(secondUserVariableName, secondSprite)
-		);
+				ProjectManager.getInstance().getCurrentProject().getDataContainer()
+						.getUserVariable(secondUserVariableName, secondSprite));
 
 		ChangeVariableBrick changeVariableBrick1 = new ChangeVariableBrick(new Formula(
-				setVariable1ToValue), ProjectManager.getInstance().getCurrentProject().getUserVariables()
+				setVariable1ToValue), ProjectManager.getInstance().getCurrentProject().getDataContainer()
 				.getUserVariable(firstUserVariableName, secondSprite));
 
 		ChangeVariableBrick changeVariableBrick2 = new ChangeVariableBrick(new Formula(
-				setVariable2ToValue), ProjectManager.getInstance().getCurrentProject().getUserVariables()
+				setVariable2ToValue), ProjectManager.getInstance().getCurrentProject().getDataContainer()
 				.getUserVariable(secondUserVariableName, secondSprite));
 
 		Script startScript1 = new StartScript();
@@ -274,7 +276,7 @@ public class ProjectActivityTest extends BaseActivityInstrumentationTestCase<Mai
 		try {
 			StandardProjectHandler.createAndSaveStandardProject(getActivity());
 		} catch (IOException e) {
-			e.printStackTrace();
+			Log.e(TAG, "Standard Project not created", e);
 			fail("Standard Project not created");
 		}
 		Sprite sprite = new Sprite(defaultSpriteName + solo.getString(R.string.copy_sprite_name_suffix));
@@ -340,7 +342,7 @@ public class ProjectActivityTest extends BaseActivityInstrumentationTestCase<Mai
 		int currentNumberOfSprites = getCurrentNumberOfSprites() - 1;
 		UiTestUtils.openActionMode(solo, solo.getString(R.string.copy), R.id.copy, getActivity());
 		String selectAll = solo.getString(R.string.select_all).toUpperCase(Locale.getDefault());
-		solo.clickOnText(selectAll);
+		UiTestUtils.clickOnText(solo, selectAll);
 
 		for (CheckBox checkBox : solo.getCurrentViews(CheckBox.class)) {
 			if (checkBox.isShown()) {
@@ -362,6 +364,10 @@ public class ProjectActivityTest extends BaseActivityInstrumentationTestCase<Mai
 
 		enterTextAndCloseDialog(sometext);
 
+		assertTrue("dialog not loaded in 5 seconds",
+				solo.waitForText(solo.getString(R.string.project_orientation_title), 0, 5000));
+
+		solo.clickOnButton(solo.getString(R.string.ok));
 		solo.waitForActivity(ProjectActivity.class.getSimpleName());
 		solo.waitForFragmentById(R.id.fragment_sprites_list);
 
@@ -414,6 +420,7 @@ public class ProjectActivityTest extends BaseActivityInstrumentationTestCase<Mai
 		UiTestUtils.addNewSprite(solo, addedSpriteName, lookFile);
 
 		solo.waitForText(addedSpriteName, 1, 2000);
+
 		assertTrue("Sprite '" + addedSpriteName + "' was not found - List did not move to last added sprite",
 				solo.searchText(addedSpriteName, 0, false));
 	}
@@ -959,6 +966,7 @@ public class ProjectActivityTest extends BaseActivityInstrumentationTestCase<Mai
 
 		UiTestUtils.clickOnActionBar(solo, R.id.delete);
 		solo.clickInList(2);
+		solo.sleep(200);
 
 		ArrayList<CheckBox> checkBoxList = solo.getCurrentViews(CheckBox.class);
 		assertTrue("CheckBox not checked", checkBoxList.get(1).isChecked());
@@ -1059,7 +1067,6 @@ public class ProjectActivityTest extends BaseActivityInstrumentationTestCase<Mai
 		assertEquals("First sprite should be " + TEST_SPRITE_NAME, spriteList.get(0).getName(), TEST_SPRITE_NAME);
 		assertEquals("Second sprite should be " + FIRST_TEST_SPRITE_NAME, spriteList.get(1).getName(),
 				FIRST_TEST_SPRITE_NAME);
-
 	}
 
 	public void testLongClickCancelDeleteAndCopy() {
@@ -1389,7 +1396,7 @@ public class ProjectActivityTest extends BaseActivityInstrumentationTestCase<Mai
 					internTokenListToCheck.get(i).getTokenStringValue());
 		}
 
-		UserVariablesContainer variablesContainer = projectManager.getCurrentProject().getUserVariables();
+		DataContainer variablesContainer = projectManager.getCurrentProject().getDataContainer();
 		UserVariable firstVariable = variablesContainer.getUserVariable("global", firstSprite);
 		UserVariable copiedVariable = variablesContainer.getUserVariable("global", copiedSprite);
 		assertSame("Formula is not copied right!", firstVariable, copiedVariable);

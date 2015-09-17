@@ -1,6 +1,6 @@
 /*
  * Catroid: An on-device visual programming system for Android devices
- * Copyright (C) 2010-2014 The Catrobat Team
+ * Copyright (C) 2010-2015 The Catrobat Team
  * (<http://developer.catrobat.org/credits>)
  *
  * This program is free software: you can redistribute it and/or modify
@@ -34,16 +34,18 @@ import com.robotium.solo.Solo;
 
 import org.catrobat.catroid.R;
 import org.catrobat.catroid.common.Constants;
+import org.catrobat.catroid.test.utils.Reflection;
 import org.catrobat.catroid.ui.MainMenuActivity;
 import org.catrobat.catroid.uitest.annotation.Device;
 import org.catrobat.catroid.uitest.util.BaseActivityInstrumentationTestCase;
-import org.catrobat.catroid.uitest.util.Reflection;
+
 import org.catrobat.catroid.uitest.util.UiTestUtils;
 import org.catrobat.catroid.web.ServerCalls;
 
 import java.util.ArrayList;
 import java.util.Locale;
 
+//Aborts on emulator
 public class UserConceptTest extends BaseActivityInstrumentationTestCase<MainMenuActivity> {
 
 	private String saveToken;
@@ -74,6 +76,7 @@ public class UserConceptTest extends BaseActivityInstrumentationTestCase<MainMen
 		super.tearDown();
 	}
 
+	@Device
 	public void testLicenceLinkPresent() throws Throwable {
 		setTestUrl();
 		SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getActivity());
@@ -87,6 +90,7 @@ public class UserConceptTest extends BaseActivityInstrumentationTestCase<MainMen
 				solo.searchText(solo.getString(R.string.register_pocketcode_terms_of_use_text)));
 	}
 
+	@Device
 	public void testRegisterNewUser() throws Throwable {
 		setTestUrl();
 		SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getActivity());
@@ -100,6 +104,7 @@ public class UserConceptTest extends BaseActivityInstrumentationTestCase<MainMen
 		assertNotNull("Upload Dialog is not shown.", solo.getText(solo.getString(R.string.upload_project_dialog_title)));
 	}
 
+	@Device
 	public void testRegisterWithValidTokenSaved() throws Throwable {
 		setTestUrl();
 		UiTestUtils.createValidUser(getActivity());
@@ -110,6 +115,7 @@ public class UserConceptTest extends BaseActivityInstrumentationTestCase<MainMen
 		assertNotNull("Upload Dialog is not shown.", solo.getText(solo.getString(R.string.upload_project_dialog_title)));
 	}
 
+	@Device
 	public void testTokenPersistance() throws Throwable {
 		setTestUrl();
 
@@ -128,13 +134,14 @@ public class UserConceptTest extends BaseActivityInstrumentationTestCase<MainMen
 		assertNotNull("Upload Dialog is not shown.", solo.getText(solo.getString(R.string.upload_project_dialog_title)));
 	}
 
+	@Device
 	public void testRegisterWithWrongToken() throws Throwable {
 		setTestUrl();
 
 		SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getActivity());
 		prefs.edit().putString(Constants.TOKEN, "wrong_token").commit();
 
-		solo.clickOnText(solo.getString(R.string.main_menu_upload));
+		UiTestUtils.clickOnText(solo, solo.getString(R.string.main_menu_upload));
 		solo.waitForText(loginDialogTitle);
 		fillLoginDialog(true);
 
@@ -142,6 +149,7 @@ public class UserConceptTest extends BaseActivityInstrumentationTestCase<MainMen
 		UiTestUtils.goBackToHome(getInstrumentation());
 	}
 
+	@Device
 	public void testRegisterWithShortPassword() throws Throwable {
 		setTestUrl();
 
@@ -182,12 +190,10 @@ public class UserConceptTest extends BaseActivityInstrumentationTestCase<MainMen
 		username = username.toLowerCase(Locale.ENGLISH);
 		fillLoginDialogWithUsername(true, username);
 		solo.waitForText(uploadDialogTitle);
-		solo.goBack();
 
 		TextView uploadProject = (TextView) solo.getView(R.id.dialog_upload_size_of_project);
 		ArrayList<View> currentViews = solo.getCurrentViews();
 		assertTrue("Cannot login because username is upper or lower case", currentViews.contains(uploadProject));
-
 	}
 
 	private void setTestUrl() throws Throwable {
@@ -218,7 +224,7 @@ public class UserConceptTest extends BaseActivityInstrumentationTestCase<MainMen
 		solo.clickOnView(passwordEditText);
 		solo.enterText(passwordEditText, testPassword);
 
-		// set the email to use. we need a random email because the server does not allow same email with different users 
+		// set the email to use. we need a random email because the server does not allow same email with different users
 		String testEmail = testUser + "@gmail.com";
 		Reflection.setPrivateField(ServerCalls.getInstance(), "emailForUiTests", testEmail);
 		solo.sendKey(Solo.ENTER);

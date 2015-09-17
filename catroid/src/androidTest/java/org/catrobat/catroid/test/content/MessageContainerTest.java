@@ -1,6 +1,6 @@
 /*
  * Catroid: An on-device visual programming system for Android devices
- * Copyright (C) 2010-2014 The Catrobat Team
+ * Copyright (C) 2010-2015 The Catrobat Team
  * (<http://developer.catrobat.org/credits>)
  *
  * This program is free software: you can redistribute it and/or modify
@@ -109,8 +109,7 @@ public class MessageContainerTest extends AndroidTestCase {
 		try {
 			ProjectManager.getInstance().loadProject(projectName3, getContext());
 			fail("Project3 should be corrupted");
-		} catch (LoadingProjectException loadingProjectException) {
-			assertTrue("Project corruption test is successful", true);
+		} catch (LoadingProjectException expected) {
 		} catch (ProjectException projectExceptions) {
 			fail("Project corruption test is failed");
 		}

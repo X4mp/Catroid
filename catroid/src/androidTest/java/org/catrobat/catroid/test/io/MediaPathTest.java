@@ -1,6 +1,6 @@
 /*
  * Catroid: An on-device visual programming system for Android devices
- * Copyright (C) 2010-2014 The Catrobat Team
+ * Copyright (C) 2010-2015 The Catrobat Team
  * (<http://developer.catrobat.org/credits>)
  *
  * This program is free software: you can redistribute it and/or modify
@@ -106,7 +106,6 @@ public class MediaPathTest extends InstrumentationTestCase {
 		testImageCopy = StorageHandler.getInstance().copyImage(projectName, testImage.getAbsolutePath(), null);
 		testImageCopy2 = StorageHandler.getInstance().copyImage(projectName, testImage.getAbsolutePath(), null);
 		testSoundCopy = StorageHandler.getInstance().copySoundFile(testSound.getAbsolutePath());
-
 	}
 
 	@Override
@@ -265,7 +264,6 @@ public class MediaPathTest extends InstrumentationTestCase {
 		assertTrue("SoundList not in project", projectString.contains("soundList"));
 		try {
 			ProjectManager.getInstance().loadProject(projectName, getInstrumentation().getTargetContext());
-			assertTrue("Load project worked correctly", true);
 		} catch (ProjectException projectException) {
 			fail("Project is not loaded successfully");
 		}

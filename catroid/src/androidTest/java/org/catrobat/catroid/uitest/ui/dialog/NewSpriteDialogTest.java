@@ -1,6 +1,6 @@
 /*
  * Catroid: An on-device visual programming system for Android devices
- * Copyright (C) 2010-2014 The Catrobat Team
+ * Copyright (C) 2010-2015 The Catrobat Team
  * (<http://developer.catrobat.org/credits>)
  *
  * This program is free software: you can redistribute it and/or modify
@@ -62,11 +62,7 @@ public class NewSpriteDialogTest extends BaseActivityInstrumentationTestCase<Mai
 	@Override
 	protected void tearDown() throws Exception {
 		lookFile.delete();
-
-		// normally super.teardown should be called last
-		// but tests crashed with Nullpointer
 		super.tearDown();
-		ProjectManager.getInstance().deleteCurrentProject();
 	}
 
 	public void testNewSpriteDialogStep1() throws Exception {

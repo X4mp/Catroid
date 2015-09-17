@@ -1,6 +1,6 @@
 /*
  * Catroid: An on-device visual programming system for Android devices
- * Copyright (C) 2010-2014 The Catrobat Team
+ * Copyright (C) 2010-2015 The Catrobat Team
  * (<http://developer.catrobat.org/credits>)
  *
  * This program is free software: you can redistribute it and/or modify
@@ -24,6 +24,7 @@ package org.catrobat.catroid.test.utiltests;
 
 import android.os.SystemClock;
 import android.test.AndroidTestCase;
+import android.util.Log;
 
 import org.catrobat.catroid.common.Constants;
 import org.catrobat.catroid.common.LookData;
@@ -52,6 +53,8 @@ import java.util.List;
 import java.util.Locale;
 
 public class UtilsTest extends AndroidTestCase {
+	private static final String TAG = UtilsTest.class.getSimpleName();
+
 	private final String testFileContent = "Hello, this is a Test-String";
 	private static final String MD5_EMPTY = "D41D8CD98F00B204E9800998ECF8427E";
 	private static final String MD5_CATROID = "4F982D927F4784F69AD6D6AF38FD96AD";
@@ -74,7 +77,7 @@ public class UtilsTest extends AndroidTestCase {
 				outputStream.flush();
 			}
 		} catch (IOException e) {
-			e.printStackTrace();
+			Log.e(TAG, "File handling error", e);
 		} finally {
 			if (outputStream != null) {
 				outputStream.close();
@@ -118,7 +121,7 @@ public class UtilsTest extends AndroidTestCase {
 			printWriter = new PrintWriter(md5TestFile);
 			printWriter.print("catroid");
 		} catch (IOException e) {
-			e.printStackTrace();
+			Log.e(TAG, "File handling error", e);
 		} finally {
 			if (printWriter != null) {
 				printWriter.close();
@@ -181,11 +184,8 @@ public class UtilsTest extends AndroidTestCase {
 
 		try {
 			standardProject = StandardProjectHandler.createAndSaveStandardProject(NEW_PROGRAM_NAME, getContext());
-		} catch (IllegalArgumentException e) {
-			e.printStackTrace();
-			fail("error creating standard project");
-		} catch (IOException e) {
-			e.printStackTrace();
+		} catch (IOException | IllegalArgumentException e) {
+			Log.e(TAG, "error creating standard project", e);
 			fail("error creating standard project");
 		}
 		assertTrue("Failed to recognize the standard project", Utils.isStandardProject(standardProject, getContext()));
@@ -201,6 +201,16 @@ public class UtilsTest extends AndroidTestCase {
 		SystemClock.sleep(1000);
 	}
 
+	public void testLoadProjectIfNeeded() {
+		Utils.saveToPreferences(getContext(), Constants.PREF_PROJECTNAME_KEY, "projectNameWhichDoesNotExist");
+		try {
+			Utils.loadProjectIfNeeded(getContext());
+		} catch (Exception e) {
+			fail("Tried to load project which should not be loadable.");
+		}
+		TestUtils.removeFromPreferences(getContext(), Constants.PREF_PROJECTNAME_KEY);
+	}
+
 	private void addSpriteAndCompareToStandardProject() {
 		Sprite sprite = new Sprite("TestSprite");
 		standardProject.addSprite(sprite);
@@ -208,7 +218,6 @@ public class UtilsTest extends AndroidTestCase {
 				Utils.isStandardProject(standardProject, getContext()));
 		standardProject.removeSprite(sprite);
 		assertTrue("Failed to recognize the standard project", Utils.isStandardProject(standardProject, getContext()));
-
 	}
 
 	private void addScriptAndCompareToStandardProject() {
@@ -271,7 +280,6 @@ public class UtilsTest extends AndroidTestCase {
 			waitBrick.setTimeToWait(oldTime);
 			assertTrue("Failed to recognize the standard project",
 					Utils.isStandardProject(standardProject, getContext()));
-
 		}
 	}
 
@@ -285,7 +293,6 @@ public class UtilsTest extends AndroidTestCase {
 
 		brickList.add(brick);
 		assertTrue("Failed to recognize the standard project", Utils.isStandardProject(standardProject, getContext()));
-
 	}
 
 	private void removeScriptAndCompareToStandardProject() {
@@ -297,7 +304,6 @@ public class UtilsTest extends AndroidTestCase {
 
 		sprite.addScript(catroidScript);
 		assertTrue("Failed to recognize the standard project", Utils.isStandardProject(standardProject, getContext()));
-
 	}
 
 	private void removeSpriteAndCompareToStandardProject() {
@@ -310,6 +316,5 @@ public class UtilsTest extends AndroidTestCase {
 
 		spriteList.add(catroidSprite);
 		assertTrue("Failed to recognize the standard project", Utils.isStandardProject(standardProject, getContext()));
-
 	}
 }

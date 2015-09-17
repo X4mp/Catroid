@@ -77,9 +77,9 @@ dependencies {
     natives 'com.badlogicgames.gdx:gdx-platform:' + gdxVersion + ':natives-x86'
     natives 'com.badlogicgames.gdx:gdx-platform:' + gdxVersion + ':natives-armeabi'
     natives 'com.badlogicgames.gdx:gdx-platform:' + gdxVersion + ':natives-armeabi-v7a'
-    compile fileTree(include: '*.jar', dir: 'catroid/libs')
-    compile fileTree(include: '*.jar', dir: 'catroid/libs-natives')
-    androidTestCompile fileTree(include: '*.jar', dir: 'catroidTest/libs')
+    compile fileTree(include: '*.jar', dir: 'src/main/libs')
+    compile fileTree(include: '*.jar', dir: 'src/main/libs-natives')
+    androidTestCompile fileTree(include: '*.jar', dir: 'src/androidTest/libs')
     androidTestCompile 'com.jayway.android.robotium:robotium-solo:5.2.1'
     androidTestCompile 'com.google.dexmaker:dexmaker-mockito:1.2'
     androidTestCompile 'org.mockito:mockito-core:1.10.19'
@@ -88,14 +88,14 @@ dependencies {
 }
 
 task copyAndroidNatives() {
-    file("catroid/jniLibs/armeabi/").mkdirs();
-    file("catroid/jniLibs/armeabi-v7a/").mkdirs();
-    file("catroid/jniLibs/x86/").mkdirs();
+    file("jniLibs/armeabi/").mkdirs();
+    file("jniLibs/armeabi-v7a/").mkdirs();
+    file("jniLibs/x86/").mkdirs();
     configurations.natives.files.each { jar ->
         def outputDir = null
-        if(jar.name.endsWith("natives-armeabi-v7a.jar")) outputDir = file("catroid/jniLibs/armeabi-v7a")
-        if(jar.name.endsWith("natives-armeabi.jar")) outputDir = file("catroid/jniLibs/armeabi")
-        if(jar.name.endsWith("natives-x86.jar")) outputDir = file("catroid/jniLibs/x86")
+        if(jar.name.endsWith("natives-armeabi-v7a.jar")) outputDir = file("jniLibs/armeabi-v7a")
+        if(jar.name.endsWith("natives-armeabi.jar")) outputDir = file("jniLibs/armeabi")
+        if(jar.name.endsWith("natives-x86.jar")) outputDir = file("jniLibs/x86")
         if(outputDir != null) {
             copy {
                 from zipTree(jar)

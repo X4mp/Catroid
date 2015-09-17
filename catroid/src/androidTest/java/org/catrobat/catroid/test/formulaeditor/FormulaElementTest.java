@@ -1,6 +1,6 @@
 /*
  * Catroid: An on-device visual programming system for Android devices
- * Copyright (C) 2010-2014 The Catrobat Team
+ * Copyright (C) 2010-2015 The Catrobat Team
  * (<http://developer.catrobat.org/credits>)
  *
  * This program is free software: you can redistribute it and/or modify
@@ -64,38 +64,38 @@ public class FormulaElementTest extends InstrumentationTestCase {
 					internTokenListAfterConversion.get(index).getInternTokenType() == internTokenList.get(index)
 							.getInternTokenType()
 							&& internTokenListAfterConversion.get(index).getTokenStringValue()
-									.compareTo(internTokenList.get(index).getTokenStringValue()) == 0);
-
+							.compareTo(internTokenList.get(index).getTokenStringValue()) == 0);
 		}
-
-		internTokenList.clear();
-
 	}
 
 	public void testInterpretNonExistingUserVariable() {
-
 		Project project = new Project(getInstrumentation().getTargetContext(), "testProject");
 		ProjectManager.getInstance().setProject(project);
 		FormulaElement formulaElement = new FormulaElement(ElementType.USER_VARIABLE, "notExistingUserVariable", null);
 		assertEquals("Not existing UserVariable misinterpretation",
 				FormulaElement.NOT_EXISTING_USER_VARIABLE_INTERPRETATION_VALUE, formulaElement.interpretRecursive(null));
+	}
 
+	public void testInterpretNonExistingUserList() {
+		Project project = new Project(getInstrumentation().getTargetContext(), "testProject");
+		ProjectManager.getInstance().setProject(project);
+		FormulaElement formulaElement = new FormulaElement(ElementType.USER_LIST, "notExistingUserList", null);
+		assertEquals("Not existing UserList misinterpretation",
+				FormulaElement.NOT_EXISTING_USER_LIST_INTERPRETATION_VALUE, formulaElement.interpretRecursive(null));
 	}
 
 	public void testInterpretNotExisitingUnaryOperator() {
-
 		FormulaElement formulaElement = new FormulaElement(ElementType.OPERATOR, Operators.PLUS.name(), null, null,
 				new FormulaElement(ElementType.NUMBER, "1.0", null));
 
 		assertEquals("Not existing unary operator misinterpretation", 0d, formulaElement.interpretRecursive(null));
-
 	}
 
 	public void testCheckDegeneratedDoubleValues() {
 
 		FormulaElement formulaElement = new FormulaElement(ElementType.OPERATOR, Operators.PLUS.name(), null,
 				new FormulaElement(ElementType.NUMBER, Double.toString(Double.MAX_VALUE), null), new FormulaElement(
-						ElementType.NUMBER, Double.toString(Double.MAX_VALUE), null));
+				ElementType.NUMBER, Double.toString(Double.MAX_VALUE), null));
 
 		assertEquals("Degenerated double values error", Double.MAX_VALUE, formulaElement.interpretRecursive(null));
 
@@ -119,7 +119,7 @@ public class FormulaElementTest extends InstrumentationTestCase {
 	public void testContainsElement() {
 		FormulaElement formulaElement = new FormulaElement(ElementType.OPERATOR, Operators.MINUS.name(), null,
 				new FormulaElement(ElementType.NUMBER, "0.0", null), new FormulaElement(ElementType.USER_VARIABLE,
-						"user-variable", null));
+				"user-variable", null));
 		assertTrue("ContainsElement: uservariable not found", formulaElement.containsElement(ElementType.USER_VARIABLE));
 
 		formulaElement = new FormulaElement(ElementType.FUNCTION, Functions.SIN.name(), null, new FormulaElement(
@@ -127,13 +127,12 @@ public class FormulaElementTest extends InstrumentationTestCase {
 
 		assertTrue("ContainsElement: Operator \" + \" should not have been found!",
 				!formulaElement.containsElement(ElementType.NUMBER));
-
 	}
 
 	public void testClone() {
 		FormulaElement formulaElement = new FormulaElement(ElementType.OPERATOR, Operators.MINUS.name(), null,
 				new FormulaElement(ElementType.NUMBER, "0.0", null), new FormulaElement(ElementType.USER_VARIABLE,
-						"user-variable", null));
+				"user-variable", null));
 
 		List<InternToken> internTokenList = formulaElement.getInternTokenList();
 
@@ -146,8 +145,7 @@ public class FormulaElementTest extends InstrumentationTestCase {
 					internTokenListAfterClone.get(index).getInternTokenType() == internTokenList.get(index)
 							.getInternTokenType()
 							&& internTokenListAfterClone.get(index).getTokenStringValue()
-									.compareTo(internTokenList.get(index).getTokenStringValue()) == 0);
-
+							.compareTo(internTokenList.get(index).getTokenStringValue()) == 0);
 		}
 
 		formulaElement = new FormulaElement(ElementType.OPERATOR, Operators.MINUS.name(), null, null,
@@ -164,10 +162,7 @@ public class FormulaElementTest extends InstrumentationTestCase {
 					internTokenListAfterClone.get(index).getInternTokenType() == internTokenList.get(index)
 							.getInternTokenType()
 							&& internTokenListAfterClone.get(index).getTokenStringValue()
-									.compareTo(internTokenList.get(index).getTokenStringValue()) == 0);
-
+							.compareTo(internTokenList.get(index).getTokenStringValue()) == 0);
 		}
-
 	}
-
 }

@@ -1,6 +1,6 @@
 /*
  * Catroid: An on-device visual programming system for Android devices
- * Copyright (C) 2010-2014 The Catrobat Team
+ * Copyright (C) 2010-2015 The Catrobat Team
  * (<http://developer.catrobat.org/credits>)
  *
  * This program is free software: you can redistribute it and/or modify
@@ -113,14 +113,12 @@ public class GoNStepsBackActionTest extends AndroidTestCase {
 		}
 	}
 
-
 	public void testNullSprite() {
 		GoNStepsBackAction action = ExtendedActions.goNStepsBack(null, steps);
 		try {
 			action.act(1.0f);
 			fail("Execution of GoNStepsBackBrick with null Sprite did not cause a NullPointerException to be thrown");
 		} catch (NullPointerException expected) {
-			assertTrue("Exception thrown successful", true);
 		}
 	}
 
@@ -173,5 +171,4 @@ public class GoNStepsBackActionTest extends AndroidTestCase {
 		assertEquals("Unexpected sprite Z position", 1, sprite.look.getZIndex());
 		assertEquals("Unexpected sprite Z position", 2, sprite2.look.getZIndex());
 	}
-
 }

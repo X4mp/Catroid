@@ -1,6 +1,6 @@
 /*
  * Catroid: An on-device visual programming system for Android devices
- * Copyright (C) 2010-2014 The Catrobat Team
+ * Copyright (C) 2010-2015 The Catrobat Team
  * (<http://developer.catrobat.org/credits>)
  *
  * This program is free software: you can redistribute it and/or modify
@@ -69,7 +69,6 @@ public class LookTest extends InstrumentationTestCase {
 		assertEquals("Wrong initialization!", true, look.visible);
 		assertEquals("Wrong initialization!", Touchable.enabled, look.getTouchable());
 		assertEquals("Wrong initialization!", "", look.getImagePath());
-
 	}
 
 	public void testImagePath() {
@@ -196,5 +195,4 @@ public class LookTest extends InstrumentationTestCase {
 		assertEquals("Wrong brightness value!", 0f, look.getBrightnessInUserInterfaceDimensionUnit());
 		assertEquals("Wrong brightness value!", 0f, Reflection.getPrivateField(look, "brightness"));
 	}
-
 }

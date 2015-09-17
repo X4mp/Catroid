@@ -1,6 +1,6 @@
 /*
  * Catroid: An on-device visual programming system for Android devices
- * Copyright (C) 2010-2014 The Catrobat Team
+ * Copyright (C) 2010-2015 The Catrobat Team
  * (<http://developer.catrobat.org/credits>)
  *
  * This program is free software: you can redistribute it and/or modify
@@ -67,14 +67,6 @@ public class DeleteDialogTest extends BaseActivityInstrumentationTestCase<MainMe
 		UiTestUtils.createTestProject();
 		soundInfoList = ProjectManager.getInstance().getCurrentSprite().getSoundList();
 		lookDataList = ProjectManager.getInstance().getCurrentSprite().getLookDataList();
-	}
-
-	@Override
-	protected void tearDown() throws Exception {
-		// normally super.teardown should be called last
-		// but tests crashed with Nullpointer
-		super.tearDown();
-		ProjectManager.getInstance().deleteCurrentProject();
 	}
 
 	public void testDeleteLooks() throws Exception {

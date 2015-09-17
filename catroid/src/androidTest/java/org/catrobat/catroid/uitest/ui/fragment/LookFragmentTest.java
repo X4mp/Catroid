@@ -1,6 +1,6 @@
 /*
  * Catroid: An on-device visual programming system for Android devices
- * Copyright (C) 2010-2014 The Catrobat Team
+ * Copyright (C) 2010-2015 The Catrobat Team
  * (<http://developer.catrobat.org/credits>)
  *
  * This program is free software: you can redistribute it and/or modify
@@ -22,15 +22,19 @@
  */
 package org.catrobat.catroid.uitest.ui.fragment;
 
+import android.content.Context;
 import android.content.Intent;
+import android.net.wifi.WifiManager;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import com.robotium.solo.By;
 import com.robotium.solo.Solo;
 
 import org.catrobat.catroid.ProjectManager;
@@ -40,15 +44,15 @@ import org.catrobat.catroid.common.LookData;
 import org.catrobat.catroid.common.ScreenValues;
 import org.catrobat.catroid.content.Sprite;
 import org.catrobat.catroid.stage.StageActivity;
+import org.catrobat.catroid.test.utils.Reflection;
 import org.catrobat.catroid.ui.MainMenuActivity;
 import org.catrobat.catroid.ui.ProgramMenuActivity;
 import org.catrobat.catroid.ui.ScriptActivity;
 import org.catrobat.catroid.ui.adapter.LookAdapter;
 import org.catrobat.catroid.ui.controller.LookController;
 import org.catrobat.catroid.ui.fragment.LookFragment;
-
+import org.catrobat.catroid.uitest.annotation.Device;
 import org.catrobat.catroid.uitest.util.BaseActivityInstrumentationTestCase;
-import org.catrobat.catroid.uitest.util.Reflection;
 import org.catrobat.catroid.uitest.util.UiTestUtils;
 import org.catrobat.catroid.utils.Utils;
 
@@ -59,6 +63,8 @@ import java.util.ArrayList;
 import java.util.Locale;
 
 public class LookFragmentTest extends BaseActivityInstrumentationTestCase<MainMenuActivity> {
+	private static final String TAG = LookFragmentTest.class.getSimpleName();
+
 	private static final int RESOURCE_IMAGE = org.catrobat.catroid.test.R.drawable.catroid_sunglasses;
 	private static final int RESOURCE_IMAGE2 = org.catrobat.catroid.test.R.drawable.catroid_banzai;
 	private static final int RESOURCE_IMAGE3 = org.catrobat.catroid.test.R.drawable.catroid_sunglasses_jpg;
@@ -68,7 +74,7 @@ public class LookFragmentTest extends BaseActivityInstrumentationTestCase<MainMe
 	private static final int ACTION_MODE_DELETE = 1;
 	private static final int ACTION_MODE_RENAME = 2;
 
-	private static final int TIME_TO_WAIT = 50;
+	private static final int TIME_TO_WAIT = 400;
 
 	private static final String FIRST_TEST_LOOK_NAME = "lookNameTest";
 	private static final String SECOND_TEST_LOOK_NAME = "lookNameTest2";
@@ -203,14 +209,20 @@ public class LookFragmentTest extends BaseActivityInstrumentationTestCase<MainMe
 	public void testAddNewLookDialog() {
 		String addLookFromCameraText = solo.getString(R.string.add_look_draw_new_image);
 		String addLookFromGalleryText = solo.getString(R.string.add_look_choose_image);
+		String addLookFromPaintroidText = solo.getString(R.string.add_look_draw_new_image);
+		String addLookFromMediaLibraryText = solo.getString(R.string.add_look_media_library);
 
 		assertFalse("Entry to add look from camera should not be visible", solo.searchText(addLookFromCameraText));
 		assertFalse("Entry to add look from gallery should not be visible", solo.searchText(addLookFromGalleryText));
+		assertFalse("Entry to add look from paintroid should not be visible", solo.searchText(addLookFromPaintroidText));
+		assertFalse("Entry to add look from library should not be visible", solo.searchText(addLookFromMediaLibraryText));
 
 		UiTestUtils.clickOnBottomBar(solo, R.id.button_add);
 
 		assertTrue("Entry to add look from camera not visible", solo.searchText(addLookFromCameraText));
 		assertTrue("Entry to add look from gallery not visible", solo.searchText(addLookFromGalleryText));
+		assertTrue("Entry to add look from paintroid not visible", solo.searchText(addLookFromPaintroidText));
+		assertTrue("Entry to add look from library not visible", solo.searchText(addLookFromMediaLibraryText));
 	}
 
 	public void testCopyLookContextMenu() {
@@ -252,7 +264,7 @@ public class LookFragmentTest extends BaseActivityInstrumentationTestCase<MainMe
 		clickOnContextMenuItem(testLookName, solo.getString(R.string.delete));
 		solo.waitForText(deleteDialogTitle);
 		solo.clickOnButton(solo.getString(R.string.yes));
-		solo.sleep(50);
+		solo.sleep(200);
 
 		int newCount = adapter.getCount();
 
@@ -275,6 +287,86 @@ public class LookFragmentTest extends BaseActivityInstrumentationTestCase<MainMe
 		assertTrue("Look not renamed in actual view", solo.searchText(newLookName));
 	}
 
+	public void testMoveLookUp() {
+		moveLookUp(SECOND_TEST_LOOK_NAME);
+		solo.sleep(TIME_TO_WAIT);
+		solo.goBack();
+		solo.clickOnText(solo.getString(R.string.backgrounds));
+
+		assertEquals("Look didn't move up (testMoveLookUp 1)", SECOND_TEST_LOOK_NAME, getLookName(0));
+		assertEquals("Look didn't move up (testMoveLookUp 2)", FIRST_TEST_LOOK_NAME, getLookName(1));
+	}
+
+	public void testMoveLookDown() {
+		moveLookDown(FIRST_TEST_LOOK_NAME);
+		solo.sleep(TIME_TO_WAIT);
+		solo.goBack();
+		solo.clickOnText(solo.getString(R.string.backgrounds));
+
+		assertEquals("Look didn't move down (testMoveLookDown 1)", SECOND_TEST_LOOK_NAME, getLookName(0));
+		assertEquals("Look didn't move down (testMoveLookDown 2)", FIRST_TEST_LOOK_NAME, getLookName(1));
+	}
+
+	public void testMoveLookToBottom() {
+		moveLookToBottom(FIRST_TEST_LOOK_NAME);
+		solo.sleep(TIME_TO_WAIT);
+		solo.goBack();
+		solo.clickOnText(solo.getString(R.string.backgrounds));
+
+		assertEquals("Look didn't move bottom (testMoveLookToBottom 1)", SECOND_TEST_LOOK_NAME, getLookName(0));
+		assertEquals("Look didn't move bottom (testMoveLookToBottom 2)", FIRST_TEST_LOOK_NAME, getLookName(1));
+	}
+
+	public void testMoveLookToTop() {
+		moveLookToTop(SECOND_TEST_LOOK_NAME);
+		solo.sleep(TIME_TO_WAIT);
+		solo.goBack();
+		solo.clickOnText(solo.getString(R.string.backgrounds));
+
+		assertEquals("Look didn't move top (testMoveLookToTop 1)", SECOND_TEST_LOOK_NAME, getLookName(0));
+		assertEquals("Look didn't move top (testMoveLookToTop 2)", FIRST_TEST_LOOK_NAME, getLookName(1));
+	}
+
+	public void testMoveLookUpFirstEntry() {
+		moveLookUp(FIRST_TEST_LOOK_NAME);
+		solo.sleep(TIME_TO_WAIT);
+		solo.goBack();
+		solo.clickOnText(solo.getString(R.string.backgrounds));
+
+		assertEquals("Look moved (testMoveLookUpFirstEntry 1)", FIRST_TEST_LOOK_NAME, getLookName(0));
+		assertEquals("Look moved (testMoveLookUpFirstEntry 2)", SECOND_TEST_LOOK_NAME, getLookName(1));
+	}
+
+	public void testMoveLookDownLastEntry() {
+		moveLookDown(SECOND_TEST_LOOK_NAME);
+		solo.sleep(TIME_TO_WAIT);
+		solo.goBack();
+		solo.clickOnText(solo.getString(R.string.backgrounds));
+
+		assertEquals("Look moved (testMoveLookDownLastEntry 1)", FIRST_TEST_LOOK_NAME, getLookName(0));
+		assertEquals("Look moved (testMoveLookDownLastEntry 2)", SECOND_TEST_LOOK_NAME, getLookName(1));
+	}
+
+	public void testMoveLookToTopFirstEntry() {
+		moveLookToTop(FIRST_TEST_LOOK_NAME);
+		solo.sleep(TIME_TO_WAIT);
+		solo.goBack();
+		solo.clickOnText(solo.getString(R.string.backgrounds));
+
+		assertEquals("Look moved (testMoveLookToTopFirstEntry 1)", FIRST_TEST_LOOK_NAME, getLookName(0));
+		assertEquals("Look moved (testMoveLookToTopFirstEntry 2)", SECOND_TEST_LOOK_NAME, getLookName(1));
+	}
+
+	public void testMoveLookToBottomLastEntry() {
+		moveLookToBottom(SECOND_TEST_LOOK_NAME);
+		solo.sleep(TIME_TO_WAIT);
+		solo.goBack();
+		solo.clickOnText(solo.getString(R.string.backgrounds));
+
+		assertEquals("Look moved (testMoveLookToBottomLastEntry 1)", FIRST_TEST_LOOK_NAME, getLookName(0));
+		assertEquals("Look moved (testMoveLookToBottomLastEntry 2)", SECOND_TEST_LOOK_NAME, getLookName(1));
+	}
+
 	public void testShowAndHideDetails() {
 		int timeToWait = 300;
 
@@ -295,6 +387,89 @@ public class LookFragmentTest extends BaseActivityInstrumentationTestCase<MainMe
 		solo.clickOnMenuItem(solo.getString(R.string.hide_details));
 		solo.sleep(timeToWait);
 		checkVisibilityOfViews(VISIBLE, VISIBLE, GONE, GONE);
+	}
+
+	public void testGetImageFromMediaLibrary() {
+		String mediaLibraryText = solo.getString(R.string.add_look_media_library);
+		int numberLooksBefore = ProjectManager.getInstance().getCurrentSprite().getLookDataList().size();
+
+		UiTestUtils.clickOnBottomBar(solo, R.id.button_add);
+		solo.waitForText(mediaLibraryText);
+		solo.clickOnText(mediaLibraryText);
+		solo.waitForWebElement(By.className("program"));
+		solo.clickOnWebElement(By.className("program"));
+		solo.waitForFragmentByTag(LookFragment.TAG);
+		solo.sleep(TIME_TO_WAIT);
+		int numberLooksAfter = ProjectManager.getInstance().getCurrentSprite().getLookDataList().size();
+		assertEquals("No Look was added from Media Library!", numberLooksBefore + 1, numberLooksAfter);
+		String newLookName = ProjectManager.getInstance().getCurrentSprite().getLookDataList().get(numberLooksBefore).getLookName();
+		assertEquals("Temp File was not deleted!", false, UiTestUtils.checkTempFileFromMediaLibrary(Constants
+				.TMP_LOOKS_PATH, newLookName));
+		solo.sleep(TIME_TO_WAIT);
+
+		UiTestUtils.clickOnBottomBar(solo, R.id.button_add);
+		solo.waitForText(mediaLibraryText);
+		solo.clickOnText(mediaLibraryText);
+		solo.waitForWebElement(By.className("program"));
+		solo.clickOnWebElement(By.className("program"));
+		solo.sleep(TIME_TO_WAIT);
+		solo.clickOnText(solo.getString(R.string.ok));
+		solo.waitForFragmentByTag(LookFragment.TAG);
+		solo.sleep(TIME_TO_WAIT);
+		numberLooksAfter = ProjectManager.getInstance().getCurrentSprite().getLookDataList().size();
+		assertEquals("Look was added from Media Library!", numberLooksBefore + 1, numberLooksAfter);
+		newLookName = ProjectManager.getInstance().getCurrentSprite().getLookDataList().get(numberLooksBefore)
+				.getLookName();
+		assertEquals("Temp File was not deleted!", false, UiTestUtils.checkTempFileFromMediaLibrary(Constants
+				.TMP_LOOKS_PATH, newLookName));
+		solo.sleep(TIME_TO_WAIT);
+
+		UiTestUtils.clickOnBottomBar(solo, R.id.button_add);
+		solo.waitForText(mediaLibraryText);
+		solo.clickOnText(mediaLibraryText);
+		solo.waitForWebElement(By.className("program"));
+		solo.clickOnWebElement(By.className("program"));
+		solo.waitForDialogToOpen();
+		solo.clickOnView(solo.getView(R.id.dialog_overwrite_media_radio_rename));
+		UiTestUtils.enterText(solo, 0, "testMedia");
+		solo.sleep(TIME_TO_WAIT);
+		solo.clickOnView(solo.getView(Button.class, 3));
+		solo.waitForFragmentByTag(LookFragment.TAG);
+		solo.sleep(TIME_TO_WAIT);
+		numberLooksAfter = ProjectManager.getInstance().getCurrentSprite().getLookDataList().size();
+		assertEquals("Second Look was not added from Media Library!", numberLooksBefore + 2, numberLooksAfter);
+		newLookName = ProjectManager.getInstance().getCurrentSprite().getLookDataList().get(numberLooksBefore).getLookName();
+		assertEquals("Temp File was not deleted!", false, UiTestUtils.checkTempFileFromMediaLibrary(Constants.TMP_LOOKS_PATH, newLookName));
+		newLookName = ProjectManager.getInstance().getCurrentSprite().getLookDataList().get(numberLooksBefore + 1).getLookName();
+		assertEquals("Temp File was not deleted!", false, UiTestUtils.checkTempFileFromMediaLibrary(Constants.TMP_LOOKS_PATH, newLookName));
+	}
+
+	@Device
+	public void testAddLookFromMediaLibraryWithNoInternet() {
+		String mediaLibraryText = solo.getString(R.string.add_look_media_library);
+		int retryCounter = 0;
+		WifiManager wifiManager = (WifiManager) this.getActivity().getSystemService(Context.WIFI_SERVICE);
+		wifiManager.setWifiEnabled(false);
+		while (Utils.isNetworkAvailable(getActivity())) {
+			solo.sleep(2000);
+			if (retryCounter > 30) {
+				break;
+			}
+			retryCounter++;
+		}
+		retryCounter = 0;
+		UiTestUtils.clickOnBottomBar(solo, R.id.button_add);
+		solo.waitForText(mediaLibraryText);
+		solo.clickOnText(mediaLibraryText);
+		assertTrue("Should be in Look Fragment", solo.waitForText(FIRST_TEST_LOOK_NAME));
+		wifiManager.setWifiEnabled(true);
+		while (!Utils.isNetworkAvailable(getActivity())) {
+			solo.sleep(2000);
+			if (retryCounter > 30) {
+				break;
+			}
+			retryCounter++;
+		}
 	}
 
 	public void testGetImageFromGallery() {
@@ -456,7 +631,7 @@ public class LookFragmentTest extends BaseActivityInstrumentationTestCase<MainMe
 		assertFalse("File not deleted from LookDataList", isInLookDataListSunnglasses);
 	}
 
-	public void testEditCopiedImageInPaontroid() {
+	public void testEditCopiedImageInPaintroid() {
 
 		Intent intent = new Intent(getInstrumentation().getContext(),
 				org.catrobat.catroid.uitest.mockups.MockPaintroidActivity.class);
@@ -634,13 +809,16 @@ public class LookFragmentTest extends BaseActivityInstrumentationTestCase<MainMe
 		clickOnContextMenuItem(FIRST_TEST_LOOK_NAME, copy);
 
 		renameLook(FIRST_TEST_LOOK_NAME, defaultLookName);
+		solo.sleep(200);
 		renameLook(SECOND_TEST_LOOK_NAME, defaultLookName);
+		solo.sleep(200);
 
 		String expectedLookName = defaultLookName + "1";
 		assertEquals(assertMessageText, expectedLookName, getLookName(1));
 
 		String copiedLookName = FIRST_TEST_LOOK_NAME + "_" + copyAdditionString;
 		renameLook(copiedLookName, defaultLookName);
+		solo.sleep(200);
 
 		expectedLookName = defaultLookName + "2";
 		assertEquals(assertMessageText, expectedLookName, getLookName(2));
@@ -648,12 +826,14 @@ public class LookFragmentTest extends BaseActivityInstrumentationTestCase<MainMe
 		expectedLookName = defaultLookName + "1";
 		newLookName = "x";
 		renameLook(expectedLookName, newLookName);
+		solo.sleep(200);
 
 		solo.scrollToTop();
 		clickOnContextMenuItem(newLookName, copy);
 
 		copiedLookName = newLookName + "_" + copyAdditionString;
 		renameLook(copiedLookName, defaultLookName);
+		solo.sleep(200);
 
 		assertEquals(assertMessageText, expectedLookName, getLookName(3));
 
@@ -663,7 +843,7 @@ public class LookFragmentTest extends BaseActivityInstrumentationTestCase<MainMe
 			imageFile = UiTestUtils.createTestMediaFile(Utils.buildPath(Constants.DEFAULT_ROOT, fileName + ".png"),
 					RESOURCE_IMAGE2, getActivity());
 		} catch (IOException e) {
-			e.printStackTrace();
+			Log.e(TAG, "Image was not created", e);
 			fail("Image was not created");
 		}
 		String md5ChecksumImageFile = Utils.md5Checksum(imageFile);
@@ -690,7 +870,7 @@ public class LookFragmentTest extends BaseActivityInstrumentationTestCase<MainMe
 			imageFile = UiTestUtils.createTestMediaFile(Utils.buildPath(Constants.DEFAULT_ROOT, fileName + ".png"),
 					RESOURCE_IMAGE, getActivity());
 		} catch (IOException e) {
-			e.printStackTrace();
+			Log.e(TAG, "Image was not created", e);
 			fail("Image was not created");
 		}
 		md5ChecksumImageFile = Utils.md5Checksum(imageFile);
@@ -985,8 +1165,9 @@ public class LookFragmentTest extends BaseActivityInstrumentationTestCase<MainMe
 
 	public void testDeleteSelectAll() {
 		UiTestUtils.openActionMode(solo, delete, R.id.delete, getActivity());
+		solo.waitForActivity("ScriptActivity");
 		String selectAll = solo.getString(R.string.select_all).toUpperCase(Locale.getDefault());
-		solo.clickOnText(selectAll);
+		UiTestUtils.clickOnText(solo, selectAll);
 
 		for (CheckBox checkBox : solo.getCurrentViews(CheckBox.class)) {
 			assertTrue("CheckBox is not Checked!", checkBox.isChecked());
@@ -996,7 +1177,7 @@ public class LookFragmentTest extends BaseActivityInstrumentationTestCase<MainMe
 		UiTestUtils.acceptAndCloseActionMode(solo);
 		String yes = solo.getString(R.string.yes);
 		solo.waitForText(yes);
-		solo.clickOnText(yes);
+		UiTestUtils.clickOnText(solo, yes);
 
 		assertFalse("Look was not Deleted!", solo.waitForText(FIRST_TEST_LOOK_NAME, 1, 200));
 		assertFalse("Look was not Deleted!", solo.waitForText(SECOND_TEST_LOOK_NAME, 1, 200));
@@ -1004,8 +1185,10 @@ public class LookFragmentTest extends BaseActivityInstrumentationTestCase<MainMe
 
 	public void testItemClick() {
 		UiTestUtils.openActionMode(solo, delete, R.id.delete, getActivity());
+		solo.waitForActivity("ScriptActivity");
 		solo.clickInList(2);
 
+		solo.waitForView(CheckBox.class);
 		ArrayList<CheckBox> checkBoxList = solo.getCurrentViews(CheckBox.class);
 		assertTrue("CheckBox not checked", checkBoxList.get(1).isChecked());
 
@@ -1042,7 +1225,7 @@ public class LookFragmentTest extends BaseActivityInstrumentationTestCase<MainMe
 
 		assertTrue("Bottom bar is visible", solo.getView(R.id.bottom_bar).getVisibility() == View.GONE);
 
-		int[] checkboxIndicesToCheck = {solo.getCurrentViews(CheckBox.class).size() - 1, 0, 2};
+		int[] checkboxIndicesToCheck = { solo.getCurrentViews(CheckBox.class).size() - 1, 0, 2 };
 		int expectedNumberOfLooks = currentNumberOfLooks - checkboxIndicesToCheck.length;
 
 		solo.scrollDown();
@@ -1067,7 +1250,7 @@ public class LookFragmentTest extends BaseActivityInstrumentationTestCase<MainMe
 
 		assertTrue("Bottom bar is visible", solo.getView(R.id.bottom_bar).getVisibility() == View.GONE);
 
-		int[] checkboxIndicesToCheck = {solo.getCurrentViews(CheckBox.class).size() - 1, 0, 2};
+		int[] checkboxIndicesToCheck = { solo.getCurrentViews(CheckBox.class).size() - 1, 0, 2 };
 
 		solo.scrollDown();
 		solo.clickOnCheckBox(checkboxIndicesToCheck[0]);
@@ -1081,7 +1264,6 @@ public class LookFragmentTest extends BaseActivityInstrumentationTestCase<MainMe
 		int viewAmountAfterDeleteMode = solo.getCurrentViews().size();
 
 		assertTrue("checkboxes or other delete elements are still visible", viewAmountBeforeDeleteMode == viewAmountAfterDeleteMode);
-
 	}
 
 	public void testLongClickCancelDeleteAndCopy() {
@@ -1206,8 +1388,9 @@ public class LookFragmentTest extends BaseActivityInstrumentationTestCase<MainMe
 	public void testCopySelectAll() {
 		int currentNumberOfLooks = lookDataList.size();
 		UiTestUtils.openActionMode(solo, solo.getString(R.string.copy), R.id.copy, getActivity());
+		solo.waitForActivity("ScriptActivity");
 		String selectAll = solo.getString(R.string.select_all).toUpperCase(Locale.getDefault());
-		solo.clickOnText(selectAll);
+		UiTestUtils.clickOnText(solo, selectAll);
 
 		for (CheckBox checkBox : solo.getCurrentViews(CheckBox.class)) {
 			assertTrue("CheckBox is not Checked!", checkBox.isChecked());
@@ -1237,8 +1420,8 @@ public class LookFragmentTest extends BaseActivityInstrumentationTestCase<MainMe
 		try {
 			UiTestUtils.cropImage(pathToImageFile, sampleSize);
 		} catch (FileNotFoundException e) {
+			Log.e(TAG, "Image was not found", e);
 			fail("Test failed because file was not found");
-			e.printStackTrace();
 		}
 
 		UiTestUtils.clickOnHomeActionBarButton(solo);
@@ -1270,37 +1453,39 @@ public class LookFragmentTest extends BaseActivityInstrumentationTestCase<MainMe
 		String selectAll = solo.getString(R.string.select_all).toUpperCase(Locale.getDefault());
 
 		UiTestUtils.openActionMode(solo, solo.getString(R.string.copy), R.id.copy, getActivity());
+		solo.waitForActivity("ScriptActivity");
 		assertTrue("Select All is not shown", solo.getView(R.id.select_all).isShown());
 
-		solo.clickOnText(selectAll);
+		UiTestUtils.clickOnText(solo, selectAll);
 		assertFalse("Select All is still shown", solo.getView(R.id.select_all).isShown());
 
-		solo.clickOnCheckBox(0);
+		UiTestUtils.clickOnCheckBox(solo, 0);
 		assertTrue("Select All is not shown", solo.getView(R.id.select_all).isShown());
 
-		solo.clickOnCheckBox(1);
+		UiTestUtils.clickOnCheckBox(solo, 1);
 		assertTrue("Select All is not shown", solo.getView(R.id.select_all).isShown());
 
-		solo.clickOnCheckBox(0);
-		solo.clickOnCheckBox(1);
+		UiTestUtils.clickOnCheckBox(solo, 0);
+		UiTestUtils.clickOnCheckBox(solo, 1);
 		assertFalse("Select All is still shown", solo.getView(R.id.select_all).isShown());
 
 		solo.goBack();
 
 		UiTestUtils.openActionMode(solo, solo.getString(R.string.delete), R.id.delete, getActivity());
+		solo.waitForActivity("ScriptActivity");
 		assertTrue("Select All is not shown", solo.getView(R.id.select_all).isShown());
 
-		solo.clickOnText(selectAll);
+		UiTestUtils.clickOnText(solo, selectAll);
 		assertFalse("Select All is still shown", solo.getView(R.id.select_all).isShown());
 
-		solo.clickOnCheckBox(0);
+		UiTestUtils.clickOnCheckBox(solo, 0);
 		assertTrue("Select All is not shown", solo.getView(R.id.select_all).isShown());
 
-		solo.clickOnCheckBox(1);
+		UiTestUtils.clickOnCheckBox(solo, 1);
 		assertTrue("Select All is not shown", solo.getView(R.id.select_all).isShown());
 
-		solo.clickOnCheckBox(0);
-		solo.clickOnCheckBox(1);
+		UiTestUtils.clickOnCheckBox(solo, 0);
+		UiTestUtils.clickOnCheckBox(solo, 1);
 		assertFalse("Select All is still shown", solo.getView(R.id.select_all).isShown());
 	}
 
@@ -1333,6 +1518,22 @@ public class LookFragmentTest extends BaseActivityInstrumentationTestCase<MainMe
 		solo.sendKey(Solo.ENTER);
 	}
 
+	private void moveLookDown(String lookToMove) {
+		clickOnContextMenuItem(lookToMove, solo.getString(R.string.menu_item_move_down));
+	}
+
+	private void moveLookUp(String lookToMove) {
+		clickOnContextMenuItem(lookToMove, solo.getString(R.string.menu_item_move_up));
+	}
+
+	private void moveLookToBottom(String lookToMove) {
+		clickOnContextMenuItem(lookToMove, solo.getString(R.string.menu_item_move_to_bottom));
+	}
+
+	private void moveLookToTop(String lookToMove) {
+		clickOnContextMenuItem(lookToMove, solo.getString(R.string.menu_item_move_to_top));
+	}
+
 	private LookFragment getLookFragment() {
 		ScriptActivity activity = (ScriptActivity) solo.getCurrentActivity();
 		return (LookFragment) activity.getFragment(ScriptActivity.FRAGMENT_LOOKS);
@@ -1344,6 +1545,7 @@ public class LookFragmentTest extends BaseActivityInstrumentationTestCase<MainMe
 
 	private void checkVisibilityOfViews(int imageVisibility, int lookNameVisibility, int lookDetailsVisibility,
 			int checkBoxVisibility) {
+		solo.sleep(200);
 		assertTrue("Look image " + getAssertMessageAffix(imageVisibility),
 				solo.getView(R.id.fragment_look_item_image_view).getVisibility() == imageVisibility);
 		assertTrue("Look name " + getAssertMessageAffix(lookNameVisibility),

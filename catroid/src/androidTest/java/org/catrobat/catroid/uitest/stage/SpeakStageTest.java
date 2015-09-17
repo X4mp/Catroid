@@ -1,6 +1,6 @@
 /*
  * Catroid: An on-device visual programming system for Android devices
- * Copyright (C) 2010-2014 The Catrobat Team
+ * Copyright (C) 2010-2015 The Catrobat Team
  * (<http://developer.catrobat.org/credits>)
  *
  * This program is free software: you can redistribute it and/or modify
@@ -20,9 +20,9 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+
 package org.catrobat.catroid.uitest.stage;
 
-import org.catrobat.catroid.ProjectManager;
 import org.catrobat.catroid.R;
 import org.catrobat.catroid.common.Constants;
 import org.catrobat.catroid.content.Script;
@@ -30,14 +30,12 @@ import org.catrobat.catroid.content.Sprite;
 import org.catrobat.catroid.content.StartScript;
 import org.catrobat.catroid.content.bricks.SpeakBrick;
 import org.catrobat.catroid.content.bricks.WaitBrick;
-import org.catrobat.catroid.exceptions.ProjectException;
 import org.catrobat.catroid.io.SoundManager;
 import org.catrobat.catroid.stage.StageActivity;
+import org.catrobat.catroid.test.utils.Reflection;
 import org.catrobat.catroid.ui.MainMenuActivity;
-import org.catrobat.catroid.ui.ProjectActivity;
 import org.catrobat.catroid.uitest.annotation.Device;
 import org.catrobat.catroid.uitest.util.BaseActivityInstrumentationTestCase;
-import org.catrobat.catroid.uitest.util.Reflection;
 import org.catrobat.catroid.uitest.util.UiTestUtils;
 import org.catrobat.catroid.utils.Utils;
 
@@ -46,39 +44,25 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Set;
 
-public class SpeakStageTest extends BaseActivityInstrumentationTestCase<ProjectActivity> {
-
-	private final String testText = "Test test.";
-	private final long byteLengthOfTestText = 44076L;
-	private final File speechFileTestText = new File(Constants.TEXT_TO_SPEECH_TMP_PATH, Utils.md5Checksum(testText)
-			+ Constants.TEXT_TO_SPEECH_EXTENSION);
-
-	private final String helloWorldText = "Hello World!";
-	private final long byteLengthOfHelloWorldText = 47532L;
-	private final File speechFileHelloWorlText = new File(Constants.TEXT_TO_SPEECH_TMP_PATH,
-			Utils.md5Checksum(helloWorldText) + Constants.TEXT_TO_SPEECH_EXTENSION);
-
-	private final String simultaneousText = "Speaking simultaneously";
-	private final long byteLengthOfSimultaneousText = 65196L;
-	private final File speechFileSimultaneousText = new File(Constants.TEXT_TO_SPEECH_TMP_PATH,
-			Utils.md5Checksum(simultaneousText) + Constants.TEXT_TO_SPEECH_EXTENSION);
-
-	private final String longText = "This is very very long long test text.";
-	private final long byteLengthOfLongText = 99628L;
-	private final File speechFileLongText = new File(Constants.TEXT_TO_SPEECH_TMP_PATH, Utils.md5Checksum(longText)
-			+ Constants.TEXT_TO_SPEECH_EXTENSION);
+public class SpeakStageTest extends BaseActivityInstrumentationTestCase<MainMenuActivity> {
 
 	private SoundManagerMock soundManagerMock;
 
-	public SpeakStageTest() throws InterruptedException {
-		super(ProjectActivity.class);
+	private final String testText = "Test test.";
+	private final File speechFileTestText = new File(Constants.TEXT_TO_SPEECH_TMP_PATH, Utils.md5Checksum(testText)
+			+ Constants.SOUND_STANDARD_EXTENSION);
+
+	private final String anotherLongerText = "This text is slightly longer than the Test test.";
+	private final File speechFileAnotherLongerText = new File(Constants.TEXT_TO_SPEECH_TMP_PATH, Utils.md5Checksum(anotherLongerText)
+			+ Constants.SOUND_STANDARD_EXTENSION);
+
+	public SpeakStageTest() {
+		super(MainMenuActivity.class);
 	}
 
 	@Override
 	public void setUp() throws Exception {
 		super.setUp();
-		UiTestUtils.prepareStageForTest();
-		deleteSpeechFiles();
 		soundManagerMock = new SoundManagerMock();
 		Reflection.setPrivateField(SoundManager.class, "INSTANCE", soundManagerMock);
 	}
@@ -89,117 +73,160 @@ public class SpeakStageTest extends BaseActivityInstrumentationTestCase<ProjectA
 		deleteSpeechFiles();
 	}
 
-	private void deleteSpeechFiles() {
-		File pathToSpeechFiles = new File(Constants.TEXT_TO_SPEECH_TMP_PATH);
-		pathToSpeechFiles.mkdirs();
-		for (File file : pathToSpeechFiles.listFiles()) {
-			file.delete();
-		}
-	}
-
-	private void prepareStageForTesting(String projectName) {
-		try {
-			ProjectManager.getInstance().loadProject(projectName, getActivity().getApplicationContext());
-			assertTrue("Load project worked correctly", true);
-		} catch (ProjectException projectException) {
-			fail("Could not load project.");
-		}
-		UiTestUtils.clickOnBottomBar(solo, R.id.button_play);
-		solo.waitForActivity(StageActivity.class);
-		solo.sleep(1500);
-	}
-
-	@Device
-	public void testNormalBehaviour() {
-		createNormalBehaviourProject();
-		prepareStageForTesting(UiTestUtils.PROJECTNAME1);
-
-		assertTrue("speechFileTestText does not exist", speechFileTestText.exists());
-		assertFalse("speechFileHelloWorlText already created", speechFileHelloWorlText.exists());
-		assertEquals("Length of speechFileTestText is different from original", byteLengthOfTestText,
-				speechFileTestText.length());
-
-		assertEquals("Wrong amount of soundfiles played", 1, soundManagerMock.playedSoundFiles.size());
-		assertTrue("Wrong soundfile played",
-				soundManagerMock.playedSoundFiles.contains(speechFileTestText.getAbsolutePath()));
-
-		solo.sleep(1200);
-
-		assertTrue("speechFileHelloWorlText does not exist", speechFileHelloWorlText.exists());
-		assertEquals("Length of speechFileHelloWorlText is different from original", byteLengthOfHelloWorldText,
-				speechFileHelloWorlText.length());
-
-		assertEquals("Wrong amount of soundfiles played", 2, soundManagerMock.playedSoundFiles.size());
-		assertTrue("Wrong soundfile played",
-				soundManagerMock.playedSoundFiles.contains(speechFileHelloWorlText.getAbsolutePath()));
-	}
-
-	@Device
-	public void testMultiSpeech() {
-		createMultiSpeechesProject();
-		prepareStageForTesting(UiTestUtils.PROJECTNAME3);
-		solo.sleep(1000);
-
-		assertTrue("speechFileLongText does not exist", speechFileLongText.exists());
-		assertTrue("speechFileSimultaneousText does not exist", speechFileSimultaneousText.exists());
-
-		assertEquals("Length of speechFileLongText is different from original", byteLengthOfLongText,
-				speechFileLongText.length());
-		assertEquals("Length of speechFileSimultaneousText is different from original", byteLengthOfSimultaneousText,
-				speechFileSimultaneousText.length());
-
-		assertEquals("Wrong amount of soundfiles played", 2, soundManagerMock.playedSoundFiles.size());
-		assertTrue("Wrong soundfile played",
-				soundManagerMock.playedSoundFiles.contains(speechFileLongText.getAbsolutePath()));
-		assertTrue("Wrong soundfile played",
-				soundManagerMock.playedSoundFiles.contains(speechFileSimultaneousText.getAbsolutePath()));
-	}
-
-	@Device
-	public void testDeleteSpeechFiles() {
-		createMultiSpeechesProject();
-		prepareStageForTesting(UiTestUtils.PROJECTNAME3);
-		solo.sleep(2000);
-
-		assertTrue("speechFileLongText does not exist", speechFileLongText.exists());
-		assertTrue("speechFileSimultaneousText does not exist", speechFileSimultaneousText.exists());
-
-		UiTestUtils.goToHomeActivity(getActivity());
-		solo.waitForActivity(MainMenuActivity.class);
-
-		assertEquals("TextToSpeech folder is not empty", 0,
-				new File(Constants.TEXT_TO_SPEECH_TMP_PATH).listFiles().length);
-	}
-
-	private void createNormalBehaviourProject() {
-		Sprite spriteNormal = new Sprite("testNormalBehaviour");
+	private void createSingleTestProject() {
+		Sprite spriteNormal = new Sprite("testSingleSpeech");
 
 		Script startScriptNormal = new StartScript();
 		startScriptNormal.addBrick(new SpeakBrick(testText));
-		startScriptNormal.addBrick(new WaitBrick(1500));
-		startScriptNormal.addBrick(new SpeakBrick(helloWorldText));
+		startScriptNormal.addBrick(new WaitBrick(1000));
 
 		spriteNormal.addScript(startScriptNormal);
 
 		ArrayList<Sprite> spriteListNormal = new ArrayList<Sprite>();
 		spriteListNormal.add(spriteNormal);
 
-		UiTestUtils.createProject(UiTestUtils.PROJECTNAME1, spriteListNormal, getActivity().getApplicationContext());
+		UiTestUtils.createProject(UiTestUtils.DEFAULT_TEST_PROJECT_NAME, spriteListNormal, getActivity().getApplicationContext());
+		prepareStageForTesting();
 	}
 
-	private void createMultiSpeechesProject() {
-		Sprite spriteMultiSpeech = new Sprite("testMultiSpeech");
-		Script startScriptMultiSpeech = new StartScript();
-		startScriptMultiSpeech.addBrick(new SpeakBrick(longText));
-		startScriptMultiSpeech.addBrick(new SpeakBrick(simultaneousText));
+	private void createMultipleSpeechTestProject() {
+		Sprite spriteMultiple = new Sprite("testMultipleSpeech");
 
-		spriteMultiSpeech.addScript(startScriptMultiSpeech);
+		Script startScriptMultiple = new StartScript();
+		startScriptMultiple.addBrick(new SpeakBrick(anotherLongerText));
+		startScriptMultiple.addBrick(new SpeakBrick(testText));
+		startScriptMultiple.addBrick(new WaitBrick(1000));
 
-		ArrayList<Sprite> spriteListMultiSpeech = new ArrayList<Sprite>();
-		spriteListMultiSpeech.add(spriteMultiSpeech);
+		spriteMultiple.addScript(startScriptMultiple);
 
-		UiTestUtils.createProject(UiTestUtils.PROJECTNAME3, spriteListMultiSpeech, getActivity()
-				.getApplicationContext());
+		ArrayList<Sprite> spriteListNormal = new ArrayList<Sprite>();
+		spriteListNormal.add(spriteMultiple);
+
+		UiTestUtils.createProject(UiTestUtils.DEFAULT_TEST_PROJECT_NAME, spriteListNormal, getActivity().getApplicationContext());
+		prepareStageForTesting();
+	}
+
+	private void deleteSpeechFiles() {
+		File pathToSpeechFiles = new File(Constants.TEXT_TO_SPEECH_TMP_PATH);
+		pathToSpeechFiles.mkdirs();
+		File[] files = pathToSpeechFiles.listFiles();
+		for (File file : files) {
+			file.delete();
+		}
+	}
+
+	private void prepareStageForTesting() {
+		UiTestUtils.prepareStageForTest();
+		UiTestUtils.getIntoSpritesFromMainMenu(solo);
+		UiTestUtils.clickOnBottomBar(solo, R.id.button_play);
+	}
+
+	@Device
+	public void testSingleSpeech() {
+		createSingleTestProject();
+		solo.waitForActivity(StageActivity.class.getSimpleName());
+		int currentTry = 0;
+		boolean found = false;
+		while (currentTry != 60) {
+			currentTry++;
+			if (speechFileTestText.exists()) {
+				found = true;
+				break;
+			}
+			solo.sleep(1000);
+		}
+
+		assertTrue("some of the required speechfiles do not exist.", found);
+
+		solo.sleep(5000);
+
+		assertTrue("speechFileTestText was not played.",
+				soundManagerMock.playedSoundFiles.contains(speechFileTestText.getAbsolutePath()));
+		assertEquals("Wrong amount of soundfiles played", 1, soundManagerMock.playedSoundFiles.size());
+	}
+
+	@Device
+	public void testMultipleSimultaneousSpeech() {
+		createMultipleSpeechTestProject();
+		solo.waitForActivity(StageActivity.class.getSimpleName());
+		int currentTry = 0;
+		boolean found = false;
+		while (currentTry != 120) {
+			currentTry++;
+			if (speechFileTestText.exists() && speechFileAnotherLongerText.exists()) {
+				found = true;
+				break;
+			}
+			solo.sleep(1000);
+		}
+
+		assertTrue("some of the required speechfiles do not exist.", found);
+
+		currentTry = 0;
+		found = false;
+		while (currentTry != 60) {
+			currentTry++;
+			if (soundManagerMock.playedSoundFiles.contains(speechFileTestText.getAbsolutePath())) {
+				found = true;
+				break;
+			}
+			solo.sleep(1000);
+		}
+
+		assertTrue("speechFileTestText was not played.",
+				soundManagerMock.playedSoundFiles.contains(speechFileTestText.getAbsolutePath()));
+
+		currentTry = 0;
+		found = false;
+		while (currentTry != 60) {
+			currentTry++;
+			if (soundManagerMock.playedSoundFiles.contains(speechFileAnotherLongerText.getAbsolutePath())) {
+				found = true;
+				break;
+			}
+			solo.sleep(1000);
+		}
+
+		assertTrue("speechFileAnotherLongerText was not played.",
+				soundManagerMock.playedSoundFiles.contains(speechFileAnotherLongerText.getAbsolutePath()));
+
+		assertEquals("Wrong amount of soundfiles played", 2, soundManagerMock.playedSoundFiles.size());
+	}
+
+	@Device
+	public void testDeleteSpeechFiles() {
+		createMultipleSpeechTestProject();
+		solo.waitForActivity(StageActivity.class.getSimpleName());
+		solo.sleep(2000);
+
+		int currentTry = 0;
+		boolean found = false;
+		while (currentTry != 120) {
+			currentTry++;
+			if (speechFileTestText.exists()) {
+				found = true;
+				break;
+			}
+			solo.sleep(1000);
+		}
+
+		assertTrue("some of the required speechfiles do not exist.", found);
+
+		UiTestUtils.goToHomeActivity(getActivity());
+		solo.waitForActivity(MainMenuActivity.class);
+
+		File file = new File(Constants.TEXT_TO_SPEECH_TMP_PATH);
+
+		currentTry = 0;
+		while (currentTry != 60) {
+			currentTry++;
+			if (file.listFiles().length == 0) {
+				break;
+			}
+			solo.sleep(1000);
+		}
+
+		assertEquals("TextToSpeech folder is not empty", 0, file.listFiles().length);
 	}
 
 	private class SoundManagerMock extends SoundManager {

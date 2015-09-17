@@ -1,6 +1,6 @@
 /*
  * Catroid: An on-device visual programming system for Android devices
- * Copyright (C) 2010-2014 The Catrobat Team
+ * Copyright (C) 2010-2015 The Catrobat Team
  * (<http://developer.catrobat.org/credits>)
  *
  * This program is free software: you can redistribute it and/or modify
@@ -65,48 +65,39 @@ public class ParserTestObject extends AndroidTestCase {
 		testSprite.look.setDirectionInUserInterfaceDimensionUnit(LOOK_ROTATION);
 	}
 
-    public Double interpretSensor(Sensors sensor) {
-        List<InternToken> internTokenList = new LinkedList<InternToken>();
-        internTokenList.add(new InternToken(InternTokenType.SENSOR, sensor.name()));
-        InternFormulaParser internParser = new InternFormulaParser(internTokenList);
-        FormulaElement parseTree = internParser.parseFormula();
-        Formula sensorFormula =  new Formula(parseTree);
-        try {
-            return sensorFormula.interpretDouble(testSprite);
-        } catch (InterpretationException interpretationException) {
-            Log.d(getClass().getSimpleName(), "Formula interpretation for Sensor failed.", interpretationException);
-        }
-        return Double.NaN;
-    }
+	public Double interpretSensor(Sensors sensor) {
+		List<InternToken> internTokenList = new LinkedList<InternToken>();
+		internTokenList.add(new InternToken(InternTokenType.SENSOR, sensor.name()));
+		InternFormulaParser internParser = new InternFormulaParser(internTokenList);
+		FormulaElement parseTree = internParser.parseFormula();
+		Formula sensorFormula = new Formula(parseTree);
+		try {
+			return sensorFormula.interpretDouble(testSprite);
+		} catch (InterpretationException interpretationException) {
+			Log.d(getClass().getSimpleName(), "Formula interpretation for Sensor failed.", interpretationException);
+		}
+		return Double.NaN;
+	}
 
 	public void testLookSensorValues() {
 		assertEquals("Formula interpretation is not as expected (x-Position)", LOOK_X_POSITION,
-                interpretSensor(Sensors.OBJECT_X), DELTA);
+				interpretSensor(Sensors.OBJECT_X), DELTA);
 		assertEquals("Formula interpretation is not as expected (y-Position)", LOOK_Y_POSITION,
-                interpretSensor(Sensors.OBJECT_Y), DELTA);
-		assertEquals("Formula interpretation is not as expected (ghosteffect)", LOOK_ALPHA,
-                interpretSensor(Sensors.OBJECT_GHOSTEFFECT), DELTA);
+				interpretSensor(Sensors.OBJECT_Y), DELTA);
+		assertEquals("Formula interpretation is not as expected (transparency)", LOOK_ALPHA,
+				interpretSensor(Sensors.OBJECT_TRANSPARENCY), DELTA);
 		assertEquals("Formula interpretation is not as expected (brightness)", LOOK_BRIGHTNESS,
-                interpretSensor(Sensors.OBJECT_BRIGHTNESS), DELTA);
+				interpretSensor(Sensors.OBJECT_BRIGHTNESS), DELTA);
 		assertEquals("Formula interpretation is not as expected (size)", LOOK_SCALE,
-                interpretSensor(Sensors.OBJECT_SIZE), DELTA);
+				interpretSensor(Sensors.OBJECT_SIZE), DELTA);
 		assertEquals("Formula interpretation is not as expected (rotation)", LOOK_ROTATION,
-                interpretSensor(Sensors.OBJECT_ROTATION), DELTA);
+				interpretSensor(Sensors.OBJECT_ROTATION), DELTA);
 		assertEquals("Formula interpretation is not as expected (z-index)", testSprite.look.getZIndex(),
-                interpretSensor(Sensors.OBJECT_LAYER).intValue());
-
+				interpretSensor(Sensors.OBJECT_LAYER).intValue());
 	}
 
 	public void testNotExistingLookSensorValues() {
-
-		List<InternToken> internTokenList = new LinkedList<InternToken>();
-		internTokenList.add(new InternToken(InternTokenType.SENSOR, ""));
-		InternFormulaParser internParser = new InternFormulaParser(internTokenList);
-		FormulaElement parseTree = internParser.parseFormula();
-
-		assertNull("Invalid sensor parsed:   NOT_EXISTING_SENSOR)", parseTree);
-		int errorTokenIndex = internParser.getErrorTokenIndex();
-		assertEquals("Error Token Index is not as expected", 0, errorTokenIndex);
-
+		FormulaEditorTestUtil.testSingleTokenError(InternTokenType.SENSOR, "", 0);
+		FormulaEditorTestUtil.testSingleTokenError(InternTokenType.SENSOR, "notExistingSensor O_O", 0);
 	}
 }

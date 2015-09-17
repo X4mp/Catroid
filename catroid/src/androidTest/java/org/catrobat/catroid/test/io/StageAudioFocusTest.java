@@ -1,6 +1,6 @@
 /*
  * Catroid: An on-device visual programming system for Android devices
- * Copyright (C) 2010-2014 The Catrobat Team
+ * Copyright (C) 2010-2015 The Catrobat Team
  * (<http://developer.catrobat.org/credits>)
  *
  * This program is free software: you can redistribute it and/or modify
@@ -27,8 +27,7 @@ import android.test.InstrumentationTestCase;
 
 import org.catrobat.catroid.io.StageAudioFocus;
 
-public class StageAudioFocusTest extends InstrumentationTestCase
-{
+public class StageAudioFocusTest extends InstrumentationTestCase {
 	private StageAudioFocus audioFocus = null;
 
 	@Override
@@ -43,8 +42,7 @@ public class StageAudioFocusTest extends InstrumentationTestCase
 		audioFocus = null;
 	}
 
-	public void testRequestAndReleaseAudioFocus()
-	{
+	public void testRequestAndReleaseAudioFocus() {
 		assertFalse("AudioFocus is held before requesting it", audioFocus.isAudioFocusGranted());
 		audioFocus.requestAudioFocus();
 		assertTrue("AudioFocus is not held, although it was requested", audioFocus.isAudioFocusGranted());

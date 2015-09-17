@@ -1,6 +1,6 @@
 /*
  * Catroid: An on-device visual programming system for Android devices
- * Copyright (C) 2010-2014 The Catrobat Team
+ * Copyright (C) 2010-2015 The Catrobat Team
  * (<http://developer.catrobat.org/credits>)
  *
  * This program is free software: you can redistribute it and/or modify
@@ -30,6 +30,7 @@ import org.catrobat.catroid.R;
 import org.catrobat.catroid.content.Project;
 import org.catrobat.catroid.content.Sprite;
 import org.catrobat.catroid.content.bricks.Brick;
+import org.catrobat.catroid.ui.SettingsActivity;
 import org.catrobat.catroid.ui.fragment.CategoryBricksFactory;
 
 import java.util.List;
@@ -46,6 +47,8 @@ public class CategoryBricksFactoryTest extends AndroidTestCase {
 		super.setUp();
 		context = getContext();
 
+		SettingsActivity.resetSharedPreferences(context);
+
 		Project project = new Project(context, "Project");
 		background = project.getSpriteList().get(0);
 		project.addSprite(sprite);
@@ -59,9 +62,9 @@ public class CategoryBricksFactoryTest extends AndroidTestCase {
 	}
 
 	public void testMotionBricks() {
-		final int expectedBackgroundBrickCount = 11;
+		final int expectedBackgroundBrickCount = 12;
 		checkBrickCountInCategory(R.string.category_motion, background, expectedBackgroundBrickCount);
-		final int expectedSpriteBrickCount = 14;
+		final int expectedSpriteBrickCount = 15;
 		checkBrickCountInCategory(R.string.category_motion, sprite, expectedSpriteBrickCount);
 	}
 
@@ -72,16 +75,15 @@ public class CategoryBricksFactoryTest extends AndroidTestCase {
 	}
 
 	public void testLooksBricks() {
-		final int expectedBrickCount = 14;
+		final int expectedBrickCount = 13;
 		checkBrickCountInCategory(R.string.category_looks, background, expectedBrickCount);
 		checkBrickCountInCategory(R.string.category_looks, sprite, expectedBrickCount);
 	}
 
-	public void testVariablesBricks() {
-		final int expectedBrickCount = 2;
-		checkBrickCountInCategory(R.string.category_variables, background, expectedBrickCount);
-		checkBrickCountInCategory(R.string.category_variables, sprite, expectedBrickCount);
-
+	public void testDataBricks() {
+		final int expectedBrickCount = 8;
+		checkBrickCountInCategory(R.string.category_data, background, expectedBrickCount);
+		checkBrickCountInCategory(R.string.category_data, sprite, expectedBrickCount);
 	}
 
 	public void testLegoNxtBricks() {

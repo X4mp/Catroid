@@ -1,6 +1,6 @@
 /*
  * Catroid: An on-device visual programming system for Android devices
- * Copyright (C) 2010-2014 The Catrobat Team
+ * Copyright (C) 2010-2015 The Catrobat Team
  * (<http://developer.catrobat.org/credits>)
  *
  * This program is free software: you can redistribute it and/or modify
@@ -26,7 +26,6 @@ import android.annotation.TargetApi;
 import android.os.Build;
 import android.widget.EditText;
 
-import org.catrobat.catroid.ProjectManager;
 import org.catrobat.catroid.R;
 import org.catrobat.catroid.content.Project;
 import org.catrobat.catroid.io.StorageHandler;
@@ -41,14 +40,6 @@ public class SetDescriptionDialogTest extends BaseActivityInstrumentationTestCas
 
 	public SetDescriptionDialogTest() {
 		super(MainMenuActivity.class);
-	}
-
-	@Override
-	protected void tearDown() throws Exception {
-		// normally super.teardown should be called last
-		// but tests crashed with Nullpointer
-		super.tearDown();
-		ProjectManager.getInstance().deleteCurrentProject();
 	}
 
 	// Not testable with Android 2.3, because solo is not able to enter new lines

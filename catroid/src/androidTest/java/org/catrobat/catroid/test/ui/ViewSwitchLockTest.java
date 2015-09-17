@@ -1,6 +1,6 @@
 /*
  * Catroid: An on-device visual programming system for Android devices
- * Copyright (C) 2010-2014 The Catrobat Team
+ * Copyright (C) 2010-2015 The Catrobat Team
  * (<http://developer.catrobat.org/credits>)
  *
  * This program is free software: you can redistribute it and/or modify
@@ -76,15 +76,13 @@ public class ViewSwitchLockTest extends AndroidTestCase {
 		try {
 			viewSwitchLock.lock();
 			fail("Method is supported");
-		} catch (UnsupportedOperationException unsupportedOperationException) {
-			assertTrue("Exception thrown successful", true);
+		} catch (UnsupportedOperationException expected) {
 		}
 
 		try {
 			viewSwitchLock.lockInterruptibly();
 			fail("Method is supported");
-		} catch (UnsupportedOperationException unsupportedOperationException) {
-			assertTrue("Exception thrown successful", true);
+		} catch (UnsupportedOperationException expected) {
 		} catch (Exception exception) {
 			fail("An unexcpected excpetion occured");
 		}
@@ -92,15 +90,13 @@ public class ViewSwitchLockTest extends AndroidTestCase {
 		try {
 			viewSwitchLock.newCondition();
 			fail("Method is supported");
-		} catch (UnsupportedOperationException unsupportedOperationException) {
-			assertTrue("Exception thrown successful", true);
+		} catch (UnsupportedOperationException expected) {
 		}
 
 		try {
 			viewSwitchLock.tryLock(1L, null);
 			fail("Method is supported");
-		} catch (UnsupportedOperationException unsupportedOperationException) {
-			assertTrue("Exception thrown successful", true);
+		} catch (UnsupportedOperationException expected) {
 		} catch (Exception exception) {
 			fail("An unexcpected excpetion occured");
 		}

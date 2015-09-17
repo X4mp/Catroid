@@ -1,6 +1,6 @@
 /*
  * Catroid: An on-device visual programming system for Android devices
- * Copyright (C) 2010-2014 The Catrobat Team
+ * Copyright (C) 2010-2015 The Catrobat Team
  * (<http://developer.catrobat.org/credits>)
  *
  * This program is free software: you can redistribute it and/or modify
@@ -40,13 +40,13 @@ public class GlideToActionTest extends AndroidTestCase {
 	Formula xPosition = new Formula(X_POSITION);
 	Formula yPosition = new Formula(Y_POSITION);
 	Formula duration = new Formula(DURATION);
-    private Sprite sprite;
+	private Sprite sprite;
 
-    @Override
-    protected void setUp() throws Exception {
-        sprite = new Sprite("testSprite");
-        super.setUp();
-    }
+	@Override
+	protected void setUp() throws Exception {
+		sprite = new Sprite("testSprite");
+		super.setUp();
+	}
 
 	public void testNormalBehavior() throws InterruptedException {
 		assertEquals("Unexpected initial sprite x position", 0f, sprite.look.getXInUserInterfaceDimensionUnit());
@@ -72,7 +72,6 @@ public class GlideToActionTest extends AndroidTestCase {
 			action.act(1.0f);
 			fail("Execution of GlideToBrick with null Sprite did not cause a " + "NullPointerException to be thrown");
 		} catch (NullPointerException expected) {
-			assertTrue("Exception thrown successful", true);
 		}
 	}
 

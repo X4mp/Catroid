@@ -1,6 +1,6 @@
 /*
  * Catroid: An on-device visual programming system for Android devices
- * Copyright (C) 2010-2014 The Catrobat Team
+ * Copyright (C) 2010-2015 The Catrobat Team
  * (<http://developer.catrobat.org/credits>)
  *
  * This program is free software: you can redistribute it and/or modify
@@ -24,6 +24,7 @@ package org.catrobat.catroid.test.utiltests;
 
 import android.os.Environment;
 import android.test.InstrumentationTestCase;
+import android.util.Log;
 
 import org.catrobat.catroid.ProjectManager;
 import org.catrobat.catroid.content.Project;
@@ -40,6 +41,7 @@ import java.text.DecimalFormat;
 import java.util.List;
 
 public class UtilFileTest extends InstrumentationTestCase {
+	private static final String TAG = UtilFileTest.class.getSimpleName();
 	private static final String CATROID_DIRECTORY = Environment.getExternalStorageDirectory().getAbsolutePath()
 			+ "/Pocket Code";
 
@@ -72,14 +74,6 @@ public class UtilFileTest extends InstrumentationTestCase {
 		UtilFile.deleteDirectory(testDirectory);
 		TestUtils.deleteTestProjects(projectName);
 		super.tearDown();
-	}
-
-	public void testClearDirectory() {
-		UtilFile.clearDirectory(testDirectory);
-		assertFalse("File in subdirectory still exists after call to clearDirectory", file2.exists());
-		assertFalse("Subdirectory in test directory still exists after call to clearDirectory", subDirectory.exists());
-		assertFalse("File in test directory still exists after call to clearDirectory", file1.exists());
-		assertTrue("Directory itself was deleted as well after call to clearDirectory", testDirectory.exists());
 	}
 
 	public void testDeleteDirectory() {
@@ -120,7 +114,7 @@ public class UtilFileTest extends InstrumentationTestCase {
 			printWriter = new PrintWriter(testFile);
 			printWriter.print("catroid");
 		} catch (IOException e) {
-			e.printStackTrace();
+			Log.e(TAG, "File handling error", e);
 		} finally {
 			if (printWriter != null) {
 				printWriter.close();

@@ -1,6 +1,6 @@
 /*
  * Catroid: An on-device visual programming system for Android devices
- * Copyright (C) 2010-2014 The Catrobat Team
+ * Copyright (C) 2010-2015 The Catrobat Team
  * (<http://developer.catrobat.org/credits>)
  *
  * This program is free software: you can redistribute it and/or modify
@@ -68,20 +68,14 @@ public class UploadDialogTest extends BaseActivityInstrumentationTestCase<MainMe
 		} catch (Throwable e) {
 			throw new Exception();
 		}
-		solo.sleep(200);
-		UiTestUtils.createValidUser(getActivity());
-		solo.sleep(200);
 	}
 
 	@Override
 	public void tearDown() throws Exception {
 		SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getActivity());
 		prefs.edit().putString(Constants.TOKEN, saveToken).commit();
-		// normally super.teardown should be called last
-		// but tests crashed with Nullpointer
-		super.tearDown();
-		ProjectManager.getInstance().deleteCurrentProject();
 		uploadProject = null;
+		super.tearDown();
 	}
 
 	private void setServerURLToTestURL() throws Throwable {
@@ -93,6 +87,7 @@ public class UploadDialogTest extends BaseActivityInstrumentationTestCase<MainMe
 	}
 
 	public void testUploadDialog() throws Throwable {
+		UiTestUtils.createValidUser(getActivity());
 		solo.clickOnText(solo.getString(R.string.main_menu_upload));
 		solo.waitForText(uploadDialogTitle);
 
@@ -118,6 +113,7 @@ public class UploadDialogTest extends BaseActivityInstrumentationTestCase<MainMe
 	}
 
 	public void testUploadingProjectDescriptionDefaultValue() throws Throwable {
+		UiTestUtils.createValidUser(getActivity());
 		String testDescription = "Test description";
 		String actionSetDescriptionText = solo.getString(R.string.set_description);
 
@@ -152,6 +148,7 @@ public class UploadDialogTest extends BaseActivityInstrumentationTestCase<MainMe
 	// Not testable with Android 2.3, because solo is not able to enter new lines
 	@TargetApi(Build.VERSION_CODES.JELLY_BEAN)
 	public void testProjectDescriptionUploadProject() throws Throwable {
+		UiTestUtils.createValidUser(getActivity());
 		solo.clickOnText(solo.getString(R.string.main_menu_upload));
 		boolean uploadDialogShown = solo.waitForText(uploadDialogTitle);
 

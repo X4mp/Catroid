@@ -1,6 +1,6 @@
 /*
  * Catroid: An on-device visual programming system for Android devices
- * Copyright (C) 2010-2014 The Catrobat Team
+ * Copyright (C) 2010-2015 The Catrobat Team
  * (<http://developer.catrobat.org/credits>)
  *
  * This program is free software: you can redistribute it and/or modify
@@ -73,7 +73,7 @@ class SystemAnimations {
 			for (int i = 0; i < currentScales.length; i++) {
 				currentScales[i] = animationScale;
 			}
-			setAnimationScales.invoke(windowManagerObj, new Object[]{currentScales});
+			setAnimationScales.invoke(windowManagerObj, new Object[] { currentScales });
 		} catch (Exception e) {
 			Log.e("SystemAnimations", "Could not change animation scale to " + animationScale + " :'(");
 		}

@@ -1,6 +1,6 @@
 /*
  * Catroid: An on-device visual programming system for Android devices
- * Copyright (C) 2010-2014 The Catrobat Team
+ * Copyright (C) 2010-2015 The Catrobat Team
  * (<http://developer.catrobat.org/credits>)
  *
  * This program is free software: you can redistribute it and/or modify
@@ -45,7 +45,7 @@ public class ScriptTest extends AndroidTestCase {
 		hideBrick = new HideBrick();
 		showBrick = new ShowBrick();
 		placeAtBrick = new PlaceAtBrick(0, 0);
-	};
+	}
 
 	public void testAddBricks() {
 		Script script = new StartScript();

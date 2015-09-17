@@ -1,6 +1,6 @@
 /*
  * Catroid: An on-device visual programming system for Android devices
- * Copyright (C) 2010-2014 The Catrobat Team
+ * Copyright (C) 2010-2015 The Catrobat Team
  * (<http://developer.catrobat.org/credits>)
  *
  * This program is free software: you can redistribute it and/or modify
@@ -62,14 +62,6 @@ public class LoopBrickTest extends BaseActivityInstrumentationTestCase<MainMenuA
 		super.setUp();
 		createProject();
 		UiTestUtils.getIntoScriptActivityFromMainMenu(solo);
-	}
-
-	@Override
-	public void tearDown() throws Exception {
-		// normally super.teardown should be called last
-		// but tests crashed with Nullpointer
-		super.tearDown();
-		ProjectManager.getInstance().deleteCurrentProject();
 	}
 
 	public void testRepeatBrick() {
@@ -178,9 +170,8 @@ public class LoopBrickTest extends BaseActivityInstrumentationTestCase<MainMenuA
 		UiTestUtils.dragFloatingBrick(solo, 1.25f);
 
 		assertEquals("Incorrect number of bricks.", 8, projectBrickList.size());
-		assertTrue("Wrong Brick instance. expected 4=ChangeBrightnessByNBrick, bricklist: " +
-						projectBrickList.toString(), projectBrickList.get(4) instanceof ChangeBrightnessByNBrick);
-
+		assertTrue("Wrong Brick instance. expected 4=ChangeBrightnessByNBrick, bricklist: "
+				+ projectBrickList.toString(), projectBrickList.get(4) instanceof ChangeBrightnessByNBrick);
 	}
 
 	public void testNestedForeverBricks() {
@@ -269,7 +260,7 @@ public class LoopBrickTest extends BaseActivityInstrumentationTestCase<MainMenuA
 		deleteAllBricks();
 
 		UiTestUtils.addNewBrick(solo, R.string.category_control, R.string.brick_forever);
-		UiTestUtils.dragFloatingBrickDownwards(solo, 0);
+		UiTestUtils.tapFloatingBrick(solo);
 
 		ArrayList<Brick> projectBrickList = project.getSpriteList().get(0).getScript(0).getBrickList();
 		assertEquals("Incorrect number of bricks.", 2, projectBrickList.size());
@@ -277,7 +268,7 @@ public class LoopBrickTest extends BaseActivityInstrumentationTestCase<MainMenuA
 		assertTrue("Wrong Brick instance.", projectBrickList.get(1) instanceof LoopEndlessBrick);
 
 		UiTestUtils.openActionMode(solo, solo.getString(R.string.copy), R.id.copy, getActivity());
-		solo.clickOnCheckBox(1);
+		UiTestUtils.clickOnCheckBox(solo, 1);
 		UiTestUtils.acceptAndCloseActionMode(solo);
 
 		assertEquals("Incorrect number of bricks.", 4, projectBrickList.size());
@@ -329,7 +320,7 @@ public class LoopBrickTest extends BaseActivityInstrumentationTestCase<MainMenuA
 		UiTestUtils.dragFloatingBrickDownwards(solo, 0);
 
 		UiTestUtils.openActionMode(solo, solo.getString(R.string.copy), R.id.copy, getActivity());
-		solo.clickOnCheckBox(2);
+		UiTestUtils.clickOnCheckBox(solo, 2);
 
 		UiTestUtils.acceptAndCloseActionMode(solo);
 
@@ -368,7 +359,7 @@ public class LoopBrickTest extends BaseActivityInstrumentationTestCase<MainMenuA
 
 	public void testSelectionActionMode() {
 		UiTestUtils.openActionMode(solo, solo.getString(R.string.copy), R.id.copy, getActivity());
-		solo.clickOnCheckBox(1);
+		UiTestUtils.clickOnCheckBox(solo, 1);
 
 		CheckBox repeatBrickCheckbox = (CheckBox) solo.getView(R.id.brick_repeat_checkbox);
 		CheckBox loopEndBrickCheckbox = (CheckBox) solo.getView(R.id.brick_loop_end_checkbox);
@@ -381,7 +372,7 @@ public class LoopBrickTest extends BaseActivityInstrumentationTestCase<MainMenuA
 		UiTestUtils.acceptAndCloseActionMode(solo);
 
 		UiTestUtils.openActionMode(solo, solo.getString(R.string.delete), R.id.delete, getActivity());
-		solo.clickOnCheckBox(1);
+		UiTestUtils.clickOnCheckBox(solo, 1);
 
 		repeatBrickCheckbox = (CheckBox) solo.getView(R.id.brick_repeat_checkbox);
 		loopEndBrickCheckbox = (CheckBox) solo.getView(R.id.brick_loop_end_checkbox);
@@ -443,10 +434,8 @@ public class LoopBrickTest extends BaseActivityInstrumentationTestCase<MainMenuA
 
 	private void deleteAllBricks() {
 		UiTestUtils.openActionMode(solo, solo.getString(R.string.delete), R.id.delete, getActivity());
-		solo.clickOnText(solo.getString(R.string.select_all).toUpperCase(Locale.getDefault()));
+		UiTestUtils.clickOnText(solo, solo.getString(R.string.select_all).toUpperCase(Locale.getDefault()));
 		UiTestUtils.acceptAndCloseActionMode(solo);
-		String yes = solo.getString(R.string.yes);
-		solo.waitForText(yes);
-		solo.clickOnText(yes);
+		UiTestUtils.clickOnText(solo, solo.getString(R.string.yes));
 	}
 }
