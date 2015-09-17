@@ -6,7 +6,7 @@
 *.metadata
 
 #IntelliJ IDEA
-.idea
+.idea/
 *.iml
 *.ipr
 *.iws
@@ -15,7 +15,7 @@ workspace.xml
 tasks.xml
 datasources.xml
 dataSources.ids
-.idea/
+.idea/modules.xml
 
 # files for the dex VM
 *.dex
