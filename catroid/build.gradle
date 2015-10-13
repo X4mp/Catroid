@@ -88,14 +88,14 @@ dependencies {
 }
 
 task copyAndroidNatives() {
-    file("catroid/jniLibs/armeabi/").mkdirs();
-    file("catroid/jniLibs/armeabi-v7a/").mkdirs();
-    file("catroid/jniLibs/x86/").mkdirs();
+    file("src/main/jniLibs/armeabi/").mkdirs();
+    file("src/main/jniLibs/armeabi-v7a/").mkdirs();
+    file("src/main/jniLibs/x86/").mkdirs();
     configurations.natives.files.each { jar ->
         def outputDir = null
-        if(jar.name.endsWith("natives-armeabi-v7a.jar")) outputDir = file("catroid/jniLibs/armeabi-v7a")
-        if(jar.name.endsWith("natives-armeabi.jar")) outputDir = file("catroid/jniLibs/armeabi")
-        if(jar.name.endsWith("natives-x86.jar")) outputDir = file("catroid/jniLibs/x86")
+        if(jar.name.endsWith("natives-armeabi-v7a.jar")) outputDir = file("src/main/jniLibs/armeabi-v7a")
+        if(jar.name.endsWith("natives-armeabi.jar")) outputDir = file("src/main/jniLibs/armeabi")
+        if(jar.name.endsWith("natives-x86.jar")) outputDir = file("src/main/jniLibs/x86")
         if(outputDir != null) {
             copy {
                 from zipTree(jar)
@@ -152,6 +152,16 @@ android {
         buildConfigField "String", "GIT_CURRENT_BRANCH", "\"${getCurrentGitBranch()}\""
     }
 
+    productFlavors {
+        catroid {
+            applicationId 'org.catrobat.catroid'
+        }
+
+        alice {
+            applicationId 'org.catrobat.catroid.alice'
+        }
+    }
+
     lintOptions {
         // define ignores like a specific res-folder in our lint.xml file
         lintConfig file('config/lint.xml')
@@ -167,7 +177,7 @@ android {
         ignore 'ContentDescription', 'InvalidPackage', 'ValidFragment', 'GradleDependency',
                 'ClickableViewAccessibility', 'UnusedAttribute', 'CommitPrefEdits', 'OldTargetApi',
                 'RtlSymmetry', 'GradleDynamicVersion', 'RtlHardcoded', 'HandlerLeak', 'IconMissingDensityFolder',
-                'WrongRegion', 'RelativeOverlap', 'IconColors', 'MissingTranslation'
+                'WrongRegion', 'RelativeOverlap', 'IconColors', 'MissingTranslation', 'ExtraTranslation'
 
         textReport true
         xmlReport true
@@ -186,7 +196,7 @@ android {
             res.srcDirs = ['src/main/res', 'src/androidTest/res']
             assets.srcDirs = ['src/main/assets', 'src/androidTest/assets']
 
-            jniLibs.srcDirs = ['catroid/jniLibs']
+            jniLibs.srcDirs = ['src/main/jniLibs']
         }
     }
 }
