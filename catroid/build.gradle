@@ -152,16 +152,6 @@ android {
         buildConfigField "String", "GIT_CURRENT_BRANCH", "\"${getCurrentGitBranch()}\""
     }
 
-    productFlavors {
-        catroid {
-            applicationId 'org.catrobat.catroid'
-        }
-
-        alice {
-            applicationId 'org.catrobat.catroid.alice'
-        }
-    }
-
     lintOptions {
         // define ignores like a specific res-folder in our lint.xml file
         lintConfig file('config/lint.xml')
