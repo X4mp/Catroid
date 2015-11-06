@@ -48,8 +48,6 @@ public class SettingsActivity extends SherlockPreferenceActivity {
 	private static final String SETTINGS_SHOW_PHIRO_BRICKS = "setting_enable_phiro_bricks";
 	public static final String SETTINGS_SHOW_ARDUINO_BRICKS = "setting_arduino_bricks";
 	public static final String SETTINGS_PARROT_AR_DRONE_CATROBAT_TERMS_OF_SERVICE_ACCEPTED_PERMANENTLY = "setting_parrot_ar_drone_catrobat_terms_of_service_accepted_permanently";
-	public static final String ARDUINO_SENSOR_ANALOG = "setting_arduino_sensor_analog";
-	public static final String ARDUINO_SENSOR_DIGITAL = "setting_arduino_sensor_digital";
 	PreferenceScreen screen = null;
 
 	public static final String NXT_SENSOR_1 = "setting_mindstorms_nxt_sensor_1";
@@ -112,6 +110,12 @@ public class SettingsActivity extends SherlockPreferenceActivity {
 			PreferenceScreen phiroPreference = (PreferenceScreen) findPreference(SETTINGS_SHOW_PHIRO_BRICKS);
 			phiroPreference.setEnabled(false);
 			screen.removePreference(phiroPreference);
+		}
+
+		if (!BuildConfig.FEATURE_ARDUINO_ENABLED) {
+			PreferenceScreen arduinoPreference = (PreferenceScreen) findPreference(SETTINGS_SHOW_ARDUINO_BRICKS);
+			arduinoPreference.setEnabled(false);
+			screen.removePreference(arduinoPreference);
 		}
 	}
 

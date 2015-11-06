@@ -5,16 +5,14 @@ repositories{
 apply plugin: 'java'
 
 dependencies {
-    testCompile 'junit:junit:4.10'
-    testCompile files( project(":catroid").buildDir.getPath() + '/intermediates/classes/debug' )
+    testCompile files( project(":").buildDir.getPath() + '/intermediates/classes/debug' )
+    testCompile 'junit:junit:4.12'
 }
 
 sourceSets {
     main {
         test {
-            java {
-                srcDir 'src/test/java'
-            }
+            java.srcDir 'src'
         }
         resources {
             srcDir 'res'
@@ -27,4 +25,3 @@ test {
         events "standardOut", "standardError", "failed", "passed", "skipped"
     }
 }
-

@@ -1,6 +1,6 @@
 /*
  * Catroid: An on-device visual programming system for Android devices
- * Copyright (C) 2010-2014 The Catrobat Team
+ * Copyright (C) 2010-2015 The Catrobat Team
  * (<http://developer.catrobat.org/credits>)
  *
  * This program is free software: you can redistribute it and/or modify
@@ -38,11 +38,10 @@ public class SystemOutTest extends TestCase {
 	private String errorMessages;
 	private boolean errorFound;
 
-	private static final String[] SYSTEM_OUT_DIRECTORIES = Utils.SOURCE_FILE_DIRECTORIES;
-	private static final String[] STACK_TRACE_DIRECTORIES = Utils.PRINT_STACK_TRACE_TEST_DIRECTORIES;
-	private static final String[] IGNORED_FILES = { "SystemOutTest.java" };
-	private static final String SYSTEM_OUT = "System.out";
-	private static final String PRINT_STACK_TRACE = ".printStackTrace()";
+	private static final String[] TOAST_STACK_TRACE_DIRECTORIES = Utils.TOAST_STACK_TRACE_TEST_DIRECTORIES;
+	private static final String[] IGNORED_FILES = { "SystemOutTest.java", "ToastUtil.java", "BTServer.java" };
+	private static final String TOAST_STRING = "Toast.makeText";
+	private static final String SUPERTOAST_STRING = "SuperToast";
 
 	private void checkFileForString(File file, String string) throws IOException {
 		BufferedReader reader = new BufferedReader(new FileReader(file));
@@ -76,7 +75,7 @@ public class SystemOutTest extends TestCase {
 			List<File> filesToCheck = Utils.getFilesFromDirectoryByExtension(directory, new String[] { ".java", });
 			if (IGNORED_FILES != null) {
 				for (String ignoredFileString : IGNORED_FILES) {
-					for (ListIterator<File> listIterator = filesToCheck.listIterator(); listIterator.hasNext();) {
+					for (ListIterator<File> listIterator = filesToCheck.listIterator(); listIterator.hasNext(); ) {
 						File file = listIterator.next();
 						if (file.getName().endsWith(ignoredFileString)) {
 							listIterator.remove();
@@ -96,13 +95,15 @@ public class SystemOutTest extends TestCase {
 		errorFound = false;
 	}
 
-	public void testForSystemOut() throws IOException {
-		checkForStringInFiles(SYSTEM_OUT, SYSTEM_OUT_DIRECTORIES);
-		assertFalse("Files with 'System.out' found! \nPlease use 'Log.d(TAG, message)' instead \n\n" + errorMessages, errorFound);
+	public void testForToast() throws IOException {
+		checkForStringInFiles(TOAST_STRING, TOAST_STACK_TRACE_DIRECTORIES);
+		assertFalse("Files with 'Toast.makeText(context, text, duration)' found! \nPlease use 'ToastUtil.showError(context, message), or "
+				+ "ToastUtil.showSuccess(context, message)' instead\n\n" + errorMessages, errorFound);
 	}
 
-	public void testForPrintStackTrace() throws IOException {
-		checkForStringInFiles(PRINT_STACK_TRACE, STACK_TRACE_DIRECTORIES);
-		assertFalse("Files with '.printStackTrace()' found! \nPlease use 'Log.e(TAG, \"Reason for Exception\", exception)' or 'Log.e(TAG, Log.getStackTraceString(exception))' instead\n\n" + errorMessages, errorFound);
+	public void testForSuperToast() throws IOException {
+		checkForStringInFiles(SUPERTOAST_STRING, TOAST_STACK_TRACE_DIRECTORIES);
+		assertFalse("Files with 'SuperToast' found! \nPlease use 'ToastUtil.showError(context, message), or "
+				+ "ToastUtil.showSuccess(context, message)' instead\n\n" + errorMessages, errorFound);
 	}
 }

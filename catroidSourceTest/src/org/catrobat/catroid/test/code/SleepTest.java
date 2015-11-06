@@ -1,6 +1,6 @@
 /*
  * Catroid: An on-device visual programming system for Android devices
- * Copyright (C) 2010-2014 The Catrobat Team
+ * Copyright (C) 2010-2015 The Catrobat Team
  * (<http://developer.catrobat.org/credits>)
  *
  * This program is free software: you can redistribute it and/or modify
@@ -54,12 +54,7 @@ public class SleepTest extends TestCase {
 		while ((line = reader.readLine()) != null) {
 			if (regexMatcher.reset(line).matches()) {
 				errorFound = true;
-				errorMessageBuilder
-						.append("File ")
-						.append(file.getPath())
-						.append(':')
-						.append(lineCount)
-						.append('\n');
+				errorMessageBuilder.append("File ").append(file.getPath()).append(':').append(lineCount).append('\n');
 			}
 			++lineCount;
 		}

@@ -1,6 +1,6 @@
 /*
  * Catroid: An on-device visual programming system for Android devices
- * Copyright (C) 2010-2014 The Catrobat Team
+ * Copyright (C) 2010-2015 The Catrobat Team
  * (<http://developer.catrobat.org/credits>)
  *
  * This program is free software: you can redistribute it and/or modify
@@ -33,16 +33,17 @@ import java.util.List;
 @Ignore
 public final class Utils {
 
-	public static final String[] ALL_DIRECTORIES = { ".", "../catroid", "../catroidCucumberTest",
-			"../catroidLegoNXTBTTest" };
-	public static final String[] SOURCE_FILE_DIRECTORIES = { "src", "../catroid/src/main/java", "../catroidCucumberTest/src",
-			"../catroidLegoNXTBTTest/src" };
-	public static final String[] SOURCE_AND_RESOURCE_DIRECTORIES = { "src", "res", "../catroid/src/main/java", "../catroid/src/main/res",
-			"../catroid/src/androidTest/java", "../catroid/src/androidTest/res", "../catroidCucumberTest/src", "../catroidLegoNXTBTTest/src" };
-	public static final String[] TEST_FILE_DIRECTORIES = { "src", "../catroid/src/androidTest/java", "../catroidCucumberTest/src" };
-	public static final String[] PRINT_STACK_TRACE_TEST_DIRECTORIES = { "src", "../catroid/src/main/java",
-			"../catroidCucumberTest/src", "../catroidLegoNXTBTTest/src" };
-	public static final String[] VERSION_NAME_AND_CODE_TEST_DIRECTORIES = { "../catroid/src/main", "../catroidCucumberTest" };
+	public static final String[] ALL_DIRECTORIES = { ".", "../catroidTest", "../catroid", "../catroidCucumberTest",
+			"../catroidBluetoothTestServer" };
+	public static final String[] SOURCE_FILE_DIRECTORIES = { "src", "../catroid/src", "../catroidTest/src",
+			"../catroidCucumberTest/src", "../catroidBluetoothTestServer/src" };
+	public static final String[] SOURCE_AND_RESOURCE_DIRECTORIES = { "src", "res", "../catroid/src", "../catroid/res",
+			"../catroidTest/src", "../catroidTest/res", "../catroidCucumberTest/src", "../catroidBluetoothTestServer/src" };
+	public static final String[] TEST_FILE_DIRECTORIES = { "src", "../catroidTest/src", "../catroidCucumberTest/src" };
+	public static final String[] TOAST_STACK_TRACE_TEST_DIRECTORIES = { "src", "../catroid/src",
+			"../catroidCucumberTest/src", "../catroidBluetoothTestServer/src" };
+	public static final String[] VERSION_NAME_AND_CODE_TEST_DIRECTORIES = { "../catroid", "../catroidTest",
+			"../catroidCucumberTest" };
 	public static final String[] SLEEP_TEST_DIRECTORIES = { "../catroidCucumberTest/src" };
 
 	private Utils() {
